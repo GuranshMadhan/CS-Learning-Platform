@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.Data;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 @Entity
@@ -22,4 +23,12 @@ public class Quiz {
             nullable = false
     )
     private Classroom classroom;
+
+    @ManyToMany
+    @JoinTable(
+            name = "quiz_questions", // The name of the new hidden table
+            joinColumns = @JoinColumn(name = "quiz_id"),
+            inverseJoinColumns = @JoinColumn(name = "question_id")
+    )
+    private List<Question> questions;
 }
