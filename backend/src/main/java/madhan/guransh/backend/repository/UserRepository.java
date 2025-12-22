@@ -6,12 +6,13 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface UserRepository extends JpaRepository<User, Long> {
 
-    List<User> findAllByOrderByXpDesc();
+    Optional<List<User>> findAllByOrderByXpDesc();
 
     @Query("SELECT u FROM User u JOIN u.enrolledClassrooms c WHERE c.id = :classroomId ORDER BY u.xp DESC")
-    List<User> findLeaderboardByClassroom(Long classroomId);
+    Optional<List<User>> findLeaderboardByClassroom(Long classroomId);
 }
