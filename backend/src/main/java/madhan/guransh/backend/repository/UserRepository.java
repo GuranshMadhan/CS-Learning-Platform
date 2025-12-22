@@ -1,6 +1,6 @@
-package madhan.guransh.backend.Repository;
+package madhan.guransh.backend.repository;
 
-import madhan.guransh.backend.models.User;
+import madhan.guransh.backend.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
