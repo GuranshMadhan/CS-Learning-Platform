@@ -13,6 +13,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     Optional<List<User>> findAllByOrderByXpDesc();
 
+    Optional<User> findByEmail(String email);
+
     @Query("SELECT u FROM User u JOIN u.enrolledClassrooms c WHERE c.id = :classroomId ORDER BY u.xp DESC")
     Optional<List<User>> findLeaderboardByClassroom(Long classroomId);
 }
