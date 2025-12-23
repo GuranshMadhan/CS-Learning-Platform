@@ -5,20 +5,24 @@ import madhan.guransh.backend.model.Question;
 import madhan.guransh.backend.repository.QuestionRepository;
 import madhan.guransh.backend.services.QuestionService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import tools.jackson.databind.ObjectMapper;
-
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Collections;
 import java.util.List;
 
+@Controller
 public class QuizController {
 
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    @Autowired
+    private ObjectMapper objectMapper;
 
+    @Autowired
     private QuestionService questionService;
 
+    @Autowired
     private QuestionRepository questionRepository;
 
     @GetMapping("/quiz/{id}")

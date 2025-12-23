@@ -23,8 +23,10 @@ public class User {
     private int xp = 0;
 
     // if the user is a teacher
+    @OneToMany(mappedBy = "teacher")
     private List<Classroom> teachingClassrooms;
 
     // if the user is a student
+    @ManyToMany(mappedBy = "students")
     private List<Classroom> enrolledClassrooms;
 }

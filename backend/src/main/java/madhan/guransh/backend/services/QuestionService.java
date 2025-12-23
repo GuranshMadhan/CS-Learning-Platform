@@ -3,10 +3,11 @@ package madhan.guransh.backend.services;
 import madhan.guransh.backend.enums.QuestionType;
 import madhan.guransh.backend.model.Question;
 import madhan.guransh.backend.repository.QuestionRepository;
-import tools.jackson.databind.ObjectMapper;
-
+import org.springframework.stereotype.Service;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.List;
 
+@Service
 public class QuestionService {
 
     ObjectMapper objectMapper = new ObjectMapper();

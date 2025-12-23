@@ -16,7 +16,7 @@ public class Classroom {
     private String name;
 
     @Column(unique = true)
-    private String code;
+    private String portalCode;
 
     @ManyToOne
     private User teacher;
@@ -32,8 +32,8 @@ public class Classroom {
     // auto generates a code on creation
     @PrePersist
     protected void generateCode() {
-        if (this.code == null || this.code.isEmpty()) {
-            this.code = UUID.randomUUID().toString().substring(0, 6).toUpperCase();
+        if (this.portalCode == null || this.portalCode.isEmpty()) {
+            this.portalCode = UUID.randomUUID().toString().substring(0, 6).toUpperCase();
         }
     }
 
