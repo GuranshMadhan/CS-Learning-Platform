@@ -7,9 +7,9 @@ import lombok.Getter;
 import java.util.List;
 
 
-@Entity
 @Table(name = "users")
 @Data
+@Entity
 public class User {
     @Getter
     @Id
