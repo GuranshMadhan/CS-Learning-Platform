@@ -13,5 +13,10 @@ public class RegisterRequest {
     private String firstname;
     private String email;
     private String password;
-    private String portalCode; // Optional: For joining a group on signup
+
+    // Scenario A: Joining a group
+    private String portalCode;
+
+    // Scenario B: Creating a group (New field)
+    private String groupName;
 }
