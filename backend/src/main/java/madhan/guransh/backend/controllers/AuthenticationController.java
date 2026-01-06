@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import madhan.guransh.backend.dto.AuthenticationRequest;
 import madhan.guransh.backend.dto.AuthenticationResponse;
 import madhan.guransh.backend.dto.RegisterRequest;
+import madhan.guransh.backend.services.AuthenticationService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;

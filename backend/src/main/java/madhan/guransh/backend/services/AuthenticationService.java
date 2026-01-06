@@ -8,7 +8,7 @@ import madhan.guransh.backend.enums.Roles;
 import madhan.guransh.backend.repository.UserRepository;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.userdetails.User;
+import madhan.guransh.backend.model.User;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -25,10 +25,9 @@ public class AuthenticationService {
     // private final GroupService groupService;
 
     public AuthenticationResponse register(RegisterRequest request) {
-        // 1. Build the User object from the request
         var user = User.builder()
                 .email(request.getEmail())
-                .firstname(request.getFirstname())
+                .username(request.getFirstname())
                 .password(passwordEncoder.encode(request.getPassword()))
                 .role(Roles.USER) // Default role
                 .build();
@@ -52,8 +51,7 @@ public class AuthenticationService {
     }
 
     public AuthenticationResponse authenticate(AuthenticationRequest request) {
-        // 1. This method does all the heavy lifting.
-        // It checks the username and password. If incorrect, it throws an exception.
+        // 1. Authenticate the user credentials
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                         request.getEmail(),

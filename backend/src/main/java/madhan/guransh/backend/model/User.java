@@ -1,8 +1,8 @@
 package madhan.guransh.backend.model;
 
 import jakarta.persistence.*;
-import lombok.Data;
-import lombok.Getter;
+import lombok.*;
+import madhan.guransh.backend.enums.Roles;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -10,10 +10,12 @@ import org.springframework.security.core.userdetails.UserDetails;
 import java.util.Collection;
 import java.util.List;
 
-
+@Builder
 @Table(name = "users")
 @Data
 @Entity
+@NoArgsConstructor
+@AllArgsConstructor
 public class User implements UserDetails {
     @Getter
     @Id
@@ -23,7 +25,10 @@ public class User implements UserDetails {
     private String username;
     private String email;
     private String password;
-    private String role;
+
+    @Enumerated(EnumType.STRING)
+    private Roles role;
+
     private int xp = 0;
 
     // if the user is a teacher
@@ -36,6 +41,11 @@ public class User implements UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of(new SimpleGrantedAuthority(role));
+        return List.of(new SimpleGrantedAuthority(Roles.USER.name()));
+    }
+
+    @Override
+    public String getUsername() {
+        return email;
     }
 }
