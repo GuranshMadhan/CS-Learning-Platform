@@ -5,6 +5,8 @@ import madhan.guransh.backend.dto.AuthenticationRequest;
 import madhan.guransh.backend.dto.AuthenticationResponse;
 import madhan.guransh.backend.dto.RegisterRequest;
 import madhan.guransh.backend.enums.Roles;
+import madhan.guransh.backend.model.Classroom;
+import madhan.guransh.backend.repository.ClassroomRepository;
 import madhan.guransh.backend.repository.UserRepository;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -18,6 +20,7 @@ public class AuthenticationService {
 
     private final UserRepository repository;
     private final PasswordEncoder passwordEncoder;
+    private final ClassroomRepository classroomRepository;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
 
@@ -34,8 +37,12 @@ public class AuthenticationService {
 
         // 2. Handle Portal Code Logic (Placeholder)
         if (request.getPortalCode() != null && !request.getPortalCode().isEmpty()) {
-            // Logic: groupService.assignUserToGroup(user, request.getPortalCode());
+            var classroom = classroomRepository.findByPortalCode(request.getPortalCode())
+                    .orElseThrow(() -> new RuntimeException("Invalid Portal Code"));
             System.out.println("User is trying to join group: " + request.getPortalCode());
+
+            classroom.getStudents().add(user);
+            classroomRepository.save(classroom);
         }
 
         // 3. Save the user to the database
