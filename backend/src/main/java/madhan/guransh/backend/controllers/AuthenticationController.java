@@ -1,6 +1,9 @@
 package madhan.guransh.backend.controllers;
 
 import lombok.RequiredArgsConstructor;
+import madhan.guransh.backend.dto.AuthenticationRequest;
+import madhan.guransh.backend.dto.AuthenticationResponse;
+import madhan.guransh.backend.dto.RegisterRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
