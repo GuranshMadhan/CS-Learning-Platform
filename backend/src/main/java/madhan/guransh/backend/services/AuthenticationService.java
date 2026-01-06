@@ -23,38 +23,43 @@ public class AuthenticationService {
     private final ClassroomRepository classroomRepository;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
+    private final UserRepository userRepository;
 
     // TODO: Inject GroupService here later when we implement Portal Codes
     // private final GroupService groupService;
 
     public AuthenticationResponse register(RegisterRequest request) {
+        // 1. Create and Save the User
         var user = User.builder()
-                .email(request.getEmail())
                 .username(request.getFirstname())
+                .email(request.getEmail())
                 .password(passwordEncoder.encode(request.getPassword()))
-                .role(Roles.USER) // Default role
+                .role(Roles.USER) // Everyone starts as USER
                 .build();
 
-        // 2. Handle Portal Code Logic (Placeholder)
+        var savedUser = userRepository.save(user);
+
+        // 2. Logic: Join Existing Group
         if (request.getPortalCode() != null && !request.getPortalCode().isEmpty()) {
             var classroom = classroomRepository.findByPortalCode(request.getPortalCode())
                     .orElseThrow(() -> new RuntimeException("Invalid Portal Code"));
-            System.out.println("User is trying to join group: " + request.getPortalCode());
 
-            classroom.getStudents().add(user);
+            // Add to students list
+            classroom.getStudents().add(savedUser);
             classroomRepository.save(classroom);
         }
 
-        // 3. Save the user to the database
-        repository.save(user);
+        // 3. Logic: Create New Group
+        else if (request.getGroupName() != null && !request.getGroupName().isEmpty()) {
+            Classroom newClassroom = new Classroom();
+            newClassroom.setName(request.getGroupName());
+            newClassroom.setTeacher(savedUser); // The creator is the Admin/Teacher
+            classroomRepository.save(newClassroom);
+        }
 
-        // 4. Generate the JWT token
+        // 4. Generate Token
         var jwtToken = jwtService.generateToken(user);
-
-        // 5. Return the token
-        return AuthenticationResponse.builder()
-                .token(jwtToken)
-                .build();
+        return AuthenticationResponse.builder().token(jwtToken).build();
     }
 
     public AuthenticationResponse authenticate(AuthenticationRequest request) {
