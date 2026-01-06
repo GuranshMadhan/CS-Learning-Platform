@@ -7,14 +7,16 @@ import madhan.guransh.backend.enums.QuestionType;
 
 import java.util.List;
 
-@Data
 @Entity
+@Table(name = "questions")
+@Data
 public class Question {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String title;
+    @Column(columnDefinition = "TEXT")
+    private String content;
 
     @Enumerated(EnumType.STRING)
     private QuestionType type;
@@ -22,15 +24,23 @@ public class Question {
     @Enumerated(EnumType.STRING)
     private Difficulty difficulty;
 
-    @Column(columnDefinition = "TEXT")
-    private String description;
+    @ElementCollection
+    private List<String> options;
 
-    @Column(columnDefinition = "TEXT")
-    private String content;
+    private String correctAnswer;
 
-    @Column(columnDefinition = "TEXT")
-    private String correctSolutions;
+    private int xpValue;
 
-    @ManyToMany(mappedBy = "questions")
-    private List<Quiz> quizzes;
+    // RELATIONSHIPS -----------------------------------
+
+    // 1. If this is part of a specific Quiz (Classroom context)
+    @ManyToOne
+    @JoinColumn(name = "quiz_id")
+    private Quiz quiz;
+
+    // 2. If this belongs to a specific classroom (Private)
+    // If this is NULL, the question is "Global" and appears in Infinite Mode
+    @ManyToOne
+    @JoinColumn(name = "classroom_id")
+    private Classroom classroom;
 }
