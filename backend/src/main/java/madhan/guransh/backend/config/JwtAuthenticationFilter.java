@@ -1,4 +1,4 @@
-package madhan.guransh.backend.controllers;
+package madhan.guransh.backend.config;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
