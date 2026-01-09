@@ -1,29 +1,59 @@
 package madhan.guransh.backend.controllers;
 
+import lombok.RequiredArgsConstructor;
+import madhan.guransh.backend.dto.DashboardResponse;
+import madhan.guransh.backend.model.Classroom;
 import madhan.guransh.backend.model.User;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
-@Controller
+import java.util.List;
+import java.util.stream.Collectors;
+
+@RestController
+@RequestMapping("/api/v1/dashboard")
+@RequiredArgsConstructor
 public class DashboardController {
 
-    private User user;
+    @GetMapping
+    public ResponseEntity<DashboardResponse> getDashboard(@AuthenticationPrincipal User user) {
 
-    @GetMapping("/current")
-    public User getCurrentUser() throws Exception {
+        // 1. Map Enrolled Classrooms to Summary DTO
+        List<DashboardResponse.ClassroomSummary> enrolled = user.getEnrolledClassrooms().stream()
+                .map(this::mapToSummary)
+                .collect(Collectors.toList());
 
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        // 2. Map Teaching Classrooms to Summary DTO
+        List<DashboardResponse.ClassroomSummary> teaching = user.getTeachingClassrooms().stream()
+                .map(this::mapToSummary)
+                .collect(Collectors.toList());
 
-        if(auth == null || auth.getPrincipal().equals("anonymousUser") || !auth.isAuthenticated()) {
-            throw new Exception("User is not authenticated");
-        } else {
-            user = (User) auth.getPrincipal();
-        }
-        return user;
+        // 3. Build the response
+        var response = DashboardResponse.builder()
+                .username(user.getUsername()) // or .getFirstname()
+                .email(user.getEmail())
+                .xp(user.getXp())
+                .role(user.getRole())
+                .enrolledClassrooms(enrolled)
+                .teachingClassrooms(teaching)
+                .build();
+
+        return ResponseEntity.ok(response);
     }
 
-
+    // Helper method to convert Entity -> DTO
+    private DashboardResponse.ClassroomSummary mapToSummary(Classroom classroom) {
+        return DashboardResponse.ClassroomSummary.builder()
+                .id(classroom.getId())
+                .name(classroom.getName())
+                .portalCode(classroom.getPortalCode())
+                .build();
+    }
 }
