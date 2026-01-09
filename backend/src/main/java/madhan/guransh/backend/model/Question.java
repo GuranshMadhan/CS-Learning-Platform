@@ -36,11 +36,13 @@ public class Question {
     // 1. If this is part of a specific Quiz (Classroom context)
     @ManyToOne
     @JoinColumn(name = "quiz_id")
+    @com.fasterxml.jackson.annotation.JsonIgnore
     private Quiz quiz;
 
     // 2. If this belongs to a specific classroom (Private)
     // If this is NULL, the question is "Global" and appears in Infinite Mode
     @ManyToOne
     @JoinColumn(name = "classroom_id")
+    @com.fasterxml.jackson.annotation.JsonIgnore
     private Classroom classroom;
 }

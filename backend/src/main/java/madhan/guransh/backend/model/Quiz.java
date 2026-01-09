@@ -20,6 +20,7 @@ public class Quiz {
 
     @ManyToOne
     @JoinColumn(name = "classroom_id")
+    @com.fasterxml.jackson.annotation.JsonIgnore
     private Classroom classroom;
 
     @OneToMany(mappedBy = "quiz", cascade = CascadeType.ALL)
