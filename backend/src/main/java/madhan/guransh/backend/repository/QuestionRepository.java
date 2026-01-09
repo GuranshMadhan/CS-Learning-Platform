@@ -11,6 +11,8 @@ public interface QuestionRepository extends JpaRepository<Question, Long> {
 
     Optional<Question> findById(Long id);
 
+    List<Question> findByQuizId(Long quizId);
+
     // List questions for infinite mode
     @Query(value = "SELECT * FROM questions WHERE classroom_id IS NULL ORDER BY RAND() LIMIT :limit", nativeQuery = true)
     List<Question> findRandomGlobalQuestions(int limit);

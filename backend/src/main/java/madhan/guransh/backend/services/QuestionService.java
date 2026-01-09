@@ -1,41 +1,69 @@
 package madhan.guransh.backend.services;
 
+import lombok.RequiredArgsConstructor;
 import madhan.guransh.backend.enums.QuestionType;
 import madhan.guransh.backend.model.Question;
+import madhan.guransh.backend.model.User;
 import madhan.guransh.backend.repository.QuestionRepository;
+import madhan.guransh.backend.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class QuestionService {
 
-    ObjectMapper objectMapper = new ObjectMapper();
     private final QuestionRepository questionRepository;
+    private final UserRepository userRepository;
 
-    public QuestionService(QuestionRepository questionRepository) {
-        this.questionRepository = questionRepository;
+    /**
+     * INFINITE MODE: Get 10 random global questions
+     */
+    public List<Question> getInfiniteModeQuestions() {
+        // We fetch 10 at a time. You can change this number.
+        return questionRepository.findRandomGlobalQuestions(10);
     }
 
-    public void createParsonsQuestion(String title, List<String> codeLines) {
-        Question q = new Question();
-        q.setTitle(title);
-        q.setType(QuestionType.PARSONS_PROBLEM);
+    /**
+     * QUIZ MODE: Get all questions for a specific quiz
+     */
+    public List<Question> getQuestionsForQuiz(Long quizId) {
+        return questionRepository.findByQuizId(quizId);
+    }
 
-        try {
-            // CONVERT LIST -> JSON STRING
-            // Input:  List ["int x=1;", "print(x)"]
-            // Output: String "[\"int x=1;\", \"print(x)\"]"
-            String jsonContent = objectMapper.writeValueAsString(codeLines);
-            q.setContent(jsonContent);
+    /**
+     * CORE MECHANIC: Check answer and award XP
+     * Returns true if correct, false if incorrect.
+     */
+    public boolean submitAnswer(Long userId, Long questionId, String userAnswer) {
+        // 1. Find the question (safely)
+        Question question = questionRepository.findById(questionId)
+                .orElseThrow(() -> new RuntimeException("Question not found"));
 
-            // Save the correct order (e.g., indexes 0, 1)
-            q.setCorrectSolutions("0,1");
+        // 2. Normalize answers (trim spaces, ignore case) to be forgiving
+        // Assumes your database stores "correctAnswer" as the raw string value
+        boolean isCorrect = question.getCorrectAnswer().trim().equalsIgnoreCase(userAnswer.trim());
 
-            questionRepository.save(q);
+        // 3. If correct, Award XP
+        if (isCorrect) {
+            User user = userRepository.findById(userId)
+                    .orElseThrow(() -> new RuntimeException("User not found"));
 
-        } catch (Exception e) {
-            e.printStackTrace(); // Handle errors (like invalid text)
+            // Add the XP value of this specific question
+            user.setXp(user.getXp() + question.getXpValue());
+
+            // Save the progress
+            userRepository.save(user);
         }
+
+        return isCorrect;
+    }
+
+    /**
+     * ADMIN/TEACHER: Create a new question
+     */
+    public Question createQuestion(Question question) {
+        return questionRepository.save(question);
     }
 }
