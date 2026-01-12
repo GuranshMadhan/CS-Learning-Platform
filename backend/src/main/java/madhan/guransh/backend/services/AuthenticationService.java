@@ -25,9 +25,6 @@ public class AuthenticationService {
     private final AuthenticationManager authenticationManager;
     private final UserRepository userRepository;
 
-    // TODO: Inject GroupService here later when we implement Portal Codes
-    // private final GroupService groupService;
-
     public AuthenticationResponse register(RegisterRequest request) {
         // 1. Create and Save the User
         var user = User.builder()
@@ -73,7 +70,7 @@ public class AuthenticationService {
 
         // 2. If we get here, the user is valid. Now we find them in the DB.
         var user = repository.findByEmail(request.getEmail())
-                .orElseThrow(); // In a real app, handle this exception properly
+                .orElseThrow(); 
 
         // 3. Generate a fresh token
         var jwtToken = jwtService.generateToken(user);
