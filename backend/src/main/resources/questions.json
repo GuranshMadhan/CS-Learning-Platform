@@ -1,0 +1,31 @@
+[
+  {
+    "content": "What is the result of 10 % 3 in Java?",
+    "type": "MULTIPLE_CHOICE",
+    "difficulty": "EASY",
+    "options": ["0", "1", "2", "3"],
+    "correctAnswer": "1",
+    "xpValue": 10
+  },
+  {
+    "content": "True or False: A boolean occupies 1 bit of memory.",
+    "type": "TRUE_FALSE",
+    "difficulty": "MEDIUM",
+    "options": ["True", "False"],
+    "correctAnswer": "False",
+    "xpValue": 15
+  },
+  {
+    "content": "Rearrange the blocks to form a valid Main class.",
+    "type": "PARSONS_PROBLEM",
+    "difficulty": "EASY",
+    "options": [
+      "}",
+      "public static void main(String[] args) {",
+      "public class Main {",
+      "System.out.println(\"Hello\");"
+    ],
+    "correctAnswer": "2,1,3,0",
+    "xpValue": 20
+  }
+]
