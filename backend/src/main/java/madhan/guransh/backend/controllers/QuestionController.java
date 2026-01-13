@@ -13,16 +13,30 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/questions")
-@RequiredArgsConstructor
 public class QuestionController {
 
     private final QuestionService questionService;
 
+    public QuestionController(QuestionService questionService) {
+        this.questionService = questionService;
+        System.out.println("✅ QuestionController Loaded Successfully!");
+    }
+
     // 1. Get Infinite Mode Questions
     // GET /api/v1/questions/infinite
     @GetMapping("/infinite")
-    public ResponseEntity<List<Question>> getInfiniteQuestions() {
-        return ResponseEntity.ok(questionService.getInfiniteModeQuestions());
+    public ResponseEntity<Object> getInfiniteQuestions() {
+        System.out.println("---------- CONTROLLER HIT ----------");
+
+        List<Question> questions = questionService.getInfiniteModeQuestions();
+
+        System.out.println("CONTROLLER: Service returned " + (questions == null ? "NULL" : questions.size() + " items"));
+
+        if (questions == null || questions.isEmpty()) {
+            return ResponseEntity.ok("DEBUG: The list is EMPTY or NULL!");
+        }
+
+        return ResponseEntity.ok(questions);
     }
 
     // 2. Submit an Answer

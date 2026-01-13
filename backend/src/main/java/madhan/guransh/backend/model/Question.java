@@ -1,7 +1,9 @@
 package madhan.guransh.backend.model;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import madhan.guransh.backend.enums.Difficulty;
 import madhan.guransh.backend.enums.QuestionType;
 
@@ -9,7 +11,9 @@ import java.util.List;
 
 @Entity
 @Table(name = "questions")
-@Data
+@Data // <--- MAKE SURE THIS IS HERE
+@NoArgsConstructor
+@AllArgsConstructor
 public class Question {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -24,8 +28,10 @@ public class Question {
     @Enumerated(EnumType.STRING)
     private Difficulty difficulty;
 
-    @ElementCollection
-    private List<String> options;
+    private String option1;
+    private String option2;
+    private String option3;
+    private String option4;
 
     private String correctAnswer;
 

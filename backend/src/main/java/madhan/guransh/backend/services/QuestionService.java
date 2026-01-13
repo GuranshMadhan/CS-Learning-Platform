@@ -8,7 +8,10 @@ import madhan.guransh.backend.repository.QuestionRepository;
 import madhan.guransh.backend.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
+import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -21,8 +24,25 @@ public class QuestionService {
      * INFINITE MODE: Get 10 random global questions
      */
     public List<Question> getInfiniteModeQuestions() {
-        // We fetch 10 at a time. You can change this number.
-        return questionRepository.findRandomGlobalQuestions(10);
+        // 1. Get ALL global questions
+        List<Question> allQuestions = questionRepository.findAllRandomGlobalQuestions();
+
+        // --- DEBUGGING BLOCK ---
+        System.out.println("=================================");
+        System.out.println("DEBUG: Database returned " + allQuestions.size() + " questions.");
+        if (!allQuestions.isEmpty()) {
+            System.out.println("DEBUG: First question is: " + allQuestions.get(0).getContent());
+        } else {
+            System.out.println("DEBUG: The list is EMPTY! Query issue.");
+        }
+        System.out.println("=================================");
+        // -----------------------
+
+        Collections.shuffle(allQuestions);
+
+        return allQuestions.stream()
+                .limit(10)
+                .collect(Collectors.toList());
     }
 
     /**
@@ -31,6 +51,7 @@ public class QuestionService {
     public List<Question> getQuestionsForQuiz(Long quizId) {
         return questionRepository.findByQuizId(quizId);
     }
+
 
     /**
      * CORE MECHANIC: Check answer and award XP
