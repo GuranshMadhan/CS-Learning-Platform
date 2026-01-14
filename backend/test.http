@@ -87,3 +87,18 @@ Content-Type: application/json
 {
   "code": "{{portal_code}}"
 }
+
+### 8. Teacher Creates a Quiz (Week 1 Test)
+POST http://localhost:8080/api/v1/quizzes/create
+Authorization: Bearer {{teacher_token}}
+Content-Type: application/json
+
+{
+  "classroomId": {{classroom_id}},
+  "title": "Week 1: Java Basics",
+  "description": "Test your knowledge of variables and loops."
+}
+
+### 9. Student Checks for Quizzes
+GET http://localhost:8080/api/v1/quizzes/classroom/{{classroom_id}}
+Authorization: Bearer {{student_token}}
