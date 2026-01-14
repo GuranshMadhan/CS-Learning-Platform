@@ -1,5 +1,6 @@
 package madhan.guransh.backend.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import madhan.guransh.backend.enums.Roles;
@@ -33,10 +34,12 @@ public class User implements UserDetails {
 
     // if the user is a teacher
     @OneToMany(mappedBy = "teacher")
+    @JsonIgnore
     private List<Classroom> teachingClassrooms;
 
     // if the user is a student
     @ManyToMany(mappedBy = "students")
+    @JsonIgnore
     private List<Classroom> enrolledClassrooms;
 
     @Override

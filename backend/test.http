@@ -1,29 +1,89 @@
-### 1. Register (Creates a new user & gets a token)
+### =================================================================
+### PART 1: INFINITE MODE (Single Player Grind)
+### =================================================================
+
+### 1. Register a Standard User (Infinite Grinder)
 POST http://localhost:8080/api/v1/auth/register
 Content-Type: application/json
 
 {
-  "firstname": "Tester",
-  "lastname": "One",
-  "email": "tester@example.com",
+  "firstname": "Grind",
+  "lastname": "Master",
+  "email": "grinder@test.com",
   "password": "password123",
-  "groupName": "Class A"
+  "role": "USER"
 }
-
 > {%
-    client.global.set("auth_token", response.body.token);
-    client.log("Token: " + response.body.token);
+    client.global.set("grinder_token", response.body.token);
 %}
 
-### 2. Get Questions (Uses the token automatically)
+### 2. Get Infinite Questions (Needs Token from #1)
 GET http://localhost:8080/api/v1/questions/infinite
-Authorization: Bearer {{auth_token}}
+Authorization: Bearer {{grinder_token}}
 
-### 3. Submit Answer for Question ID 1
+### 3. Submit Answer for Question ID 1 (Earn XP)
 POST http://localhost:8080/api/v1/questions/1/submit
-Authorization: Bearer {{auth_token}}
+Authorization: Bearer {{grinder_token}}
 Content-Type: application/json
 
 {
   "answer": "1"
+}
+
+
+### =================================================================
+### PART 2: PORTAL SYSTEM (Multiplayer Classrooms)
+### =================================================================
+
+### 4. Register a TEACHER (Mr. Smith)
+POST http://localhost:8080/api/v1/auth/register
+Content-Type: application/json
+
+{
+  "firstname": "Mr",
+  "lastname": "Smith",
+  "email": "teacher@school.com",
+  "password": "password123",
+  "role": "ADMIN"
+}
+> {%
+    client.global.set("teacher_token", response.body.token);
+%}
+
+### 5. Teacher Creates a Classroom
+POST http://localhost:8080/api/v1/classrooms/create
+Authorization: Bearer {{teacher_token}}
+Content-Type: application/json
+
+{
+  "name": "CS 101 - Intro to Java"
+}
+> {%
+    // SAVE THE PORTAL CODE FOR THE STUDENT TO USE IN STEP 7
+    client.global.set("portal_code", response.body.portalCode);
+    client.log("Generated Code: " + response.body.portalCode);
+%}
+
+### 6. Register a STUDENT (Jimmy)
+POST http://localhost:8080/api/v1/auth/register
+Content-Type: application/json
+
+{
+  "firstname": "Jimmy",
+  "lastname": "Student",
+  "email": "jimmy@school.com",
+  "password": "password123",
+  "role": "USER"
+}
+> {%
+    client.global.set("student_token", response.body.token);
+%}
+
+### 7. Student Joins the Class (Using the code from Step 5)
+POST http://localhost:8080/api/v1/classrooms/join
+Authorization: Bearer {{student_token}}
+Content-Type: application/json
+
+{
+  "code": "{{portal_code}}"
 }
