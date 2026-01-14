@@ -59,9 +59,10 @@ Content-Type: application/json
   "name": "CS 101 - Intro to Java"
 }
 > {%
-    // SAVE THE PORTAL CODE FOR THE STUDENT TO USE IN STEP 7
+    // SAVE THE PORTAL CODE
     client.global.set("portal_code", response.body.portalCode);
-    client.log("Generated Code: " + response.body.portalCode);
+    client.global.set("classroom_id", response.body.id);
+    client.log("Generated Class ID: " + response.body.id);
 %}
 
 ### 6. Register a STUDENT (Jimmy)
