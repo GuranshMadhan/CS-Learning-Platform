@@ -1,52 +1,47 @@
 package madhan.guransh.backend.controllers;
 
-import madhan.guransh.backend.enums.QuestionType;
-import madhan.guransh.backend.model.Question;
-import madhan.guransh.backend.repository.QuestionRepository;
-import madhan.guransh.backend.services.QuestionService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import java.util.Collections;
+import lombok.RequiredArgsConstructor;
+import madhan.guransh.backend.model.Quiz;
+import madhan.guransh.backend.model.User;
+import madhan.guransh.backend.services.QuizService;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
 import java.util.List;
 
-@Controller
+@RestController
+@RequestMapping("/api/v1/quizzes")
 public class QuizController {
 
-    @Autowired
-    private ObjectMapper objectMapper;
+    private final QuizService quizService;
 
-    @Autowired
-    private QuestionService questionService;
+    public QuizController(QuizService quizService) {
+        this.quizService = quizService;
+        System.out.println("✅ QUIZ CONTROLLER LOADED SUCCESSFULLY!");
+    }
 
-    @Autowired
-    private QuestionRepository questionRepository;
+    @PostMapping("/create")
+    public ResponseEntity<Quiz> createQuiz(
+            @RequestBody Map<String, Object> payload,
+            @AuthenticationPrincipal User teacher
+    ) {
+        // 2. DEBUG PRINT (To confirm request hits the method)
+        System.out.println("---------- QUIZ CREATE HIT ----------");
+        System.out.println("User: " + (teacher != null ? teacher.getUsername() : "NULL"));
 
-    @GetMapping("/quiz/{id}")
-    public String startQuiz(@PathVariable Long id, Model model) {
-        Question q = questionRepository.findById(id).orElseThrow(
-                () -> new IllegalArgumentException("Invalid question ID")
+        Long classroomId = Long.parseLong(payload.get("classroomId").toString());
+        String title = (String) payload.get("title");
+        String description = (String) payload.get("description");
+
+        return ResponseEntity.ok(
+                quizService.createQuiz(classroomId, title, description, teacher)
         );
+    }
 
-        if (q.getType() == QuestionType.PARSONS_PROBLEM) {
-            try {
-                // CONVERT JSON STRING -> JAVA LIST
-                // We tell Jackson: "Turn this string back into a List of Strings"
-                List<String> lines = objectMapper.readValue(q.getContent(), List.class);
-
-                // Shuffle for the game
-                Collections.shuffle(lines);
-
-                model.addAttribute("puzzleLines", lines);
-
-            } catch (Exception e) {
-                model.addAttribute("error", "Error loading question data");
-            }
-        }
-
-        return "game-parsons";
+    @GetMapping("/classroom/{classroomId}")
+    public ResponseEntity<List<Quiz>> getClassroomQuizzes(@PathVariable Long classroomId) {
+        return ResponseEntity.ok(quizService.getQuizzesForClassroom(classroomId));
     }
 }
