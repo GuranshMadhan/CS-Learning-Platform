@@ -1,6 +1,7 @@
 package madhan.guransh.backend.controllers;
 
 import lombok.RequiredArgsConstructor;
+import madhan.guransh.backend.model.Question;
 import madhan.guransh.backend.model.Quiz;
 import madhan.guransh.backend.model.User;
 import madhan.guransh.backend.services.QuizService;
@@ -43,5 +44,23 @@ public class QuizController {
     @GetMapping("/classroom/{classroomId}")
     public ResponseEntity<List<Quiz>> getClassroomQuizzes(@PathVariable Long classroomId) {
         return ResponseEntity.ok(quizService.getQuizzesForClassroom(classroomId));
+    }
+
+    // 3. Add a Question to a Quiz
+    @PostMapping("/add-question")
+    public ResponseEntity<Question> addQuestion(
+            @RequestBody Map<String, Object> payload
+    ) {
+        Long quizId = Long.parseLong(payload.get("quizId").toString());
+        String content = (String) payload.get("content");
+        String op1 = (String) payload.get("option1");
+        String op2 = (String) payload.get("option2");
+        String op3 = (String) payload.get("option3");
+        String op4 = (String) payload.get("option4");
+        String answer = (String) payload.get("correctAnswer");
+
+        return ResponseEntity.ok(
+                quizService.addQuestionToQuiz(quizId, content, op1, op2, op3, op4, answer)
+        );
     }
 }

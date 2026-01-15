@@ -103,3 +103,18 @@ Content-Type: application/json
 ### 9. Student Checks for Quizzes
 GET http://localhost:8080/api/v1/quizzes/classroom/{{classroom_id}}
 Authorization: Bearer {{student_token}}
+
+### 10. Teacher Adds a Question to the Quiz
+POST http://localhost:8080/api/v1/quizzes/add-question
+Authorization: Bearer {{teacher_token}}
+Content-Type: application/json
+
+{
+  "quizId": 1,
+  "content": "What is the capital of France?",
+  "option1": "London",
+  "option2": "Berlin",
+  "option3": "Paris",
+  "option4": "Madrid",
+  "correctAnswer": "Paris"
+}
