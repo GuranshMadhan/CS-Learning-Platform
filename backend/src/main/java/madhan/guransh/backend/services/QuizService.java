@@ -46,7 +46,7 @@ public class QuizService {
         return quizRepository.findAllByClassroomId(classroomId);
     }
 
-    public Question addQuestionToQuiz(Long quizId, String content, String op1, String op2, String op3, String op4, String answer {
+    public Question addQuestionToQuiz(Long quizId, String content, String op1, String op2, String op3, String op4, String answer) {
         Quiz quiz = quizRepository.findById(quizId)
                 .orElseThrow(() -> new RuntimeException("Quiz not found"));
 
