@@ -10,9 +10,11 @@ import madhan.guransh.backend.model.User;
 import madhan.guransh.backend.repository.ClassroomRepository;
 import madhan.guransh.backend.repository.QuestionRepository;
 import madhan.guransh.backend.repository.QuizRepository;
+import madhan.guransh.backend.repository.UserRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -21,6 +23,7 @@ public class QuizService {
     private final QuizRepository quizRepository;
     private final ClassroomRepository classroomRepository;
     private final QuestionRepository questionRepository;
+    private final UserRepository userRepository;
 
     public Quiz createQuiz(Long classroomId, String title, String description, User teacher) {
         // 1. Find the classroom
@@ -67,5 +70,45 @@ public class QuizService {
         questionRepository.save(question);
 
         return questionRepository.save(question);
+    }
+
+    public int submitQuiz(Long quizId, Map<String, String> studentAnswers, User student) {
+        // 1. Fetch the Quiz
+        Quiz quiz = quizRepository.findById(quizId)
+                .orElseThrow(() -> new RuntimeException("Quiz not found"));
+
+        int correctCount = 0;
+        int totalQuestions = quiz.getQuestions().size();
+
+        // 2. Loop through every question in the quiz
+        for (Question q : quiz.getQuestions()) {
+            // We expect keys like "question_4" (where 4 is the ID)
+            String key = "question_" + q.getId();
+            String studentAnswer = studentAnswers.get(key);
+
+            // Compare answers (Case insensitive just to be safe)
+            if (studentAnswer != null && studentAnswer.equalsIgnoreCase(q.getCorrectAnswer())) {
+                correctCount++;
+            }
+        }
+
+        // 3. Calculate Score (Simple Percentage)
+        // Avoid divide by zero if quiz is empty
+        if (totalQuestions == 0) return 0;
+
+        // 4. Award XP (Only if they get 100%? or just pass? Let's give XP based on correct answers)
+        // Logic: You get the Quiz Bonus ONLY if you get everything right (or maybe > 50%?)
+
+        int xpEarned = correctCount * 10; // 10 XP per correct question
+
+        if (correctCount == totalQuestions) {
+            xpEarned += quiz.getCompletionBonusXp(); // Add the 50 XP bonus for perfect score
+        }
+
+        // 5. Save the Student's new XP
+        student.setXp(student.getXp() + xpEarned);
+        userRepository.save(student);
+
+        return xpEarned;
     }
 }

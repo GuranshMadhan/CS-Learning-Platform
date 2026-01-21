@@ -63,4 +63,15 @@ public class QuizController {
                 quizService.addQuestionToQuiz(quizId, content, op1, op2, op3, op4, answer)
         );
     }
+
+    // 4. Submit a Quiz
+    @PostMapping("/{quizId}/submit")
+    public ResponseEntity<String> submitQuiz(
+            @PathVariable Long quizId,
+            @RequestBody Map<String, String> answers,
+            @AuthenticationPrincipal User student
+    ) {
+        int xpEarned = quizService.submitQuiz(quizId, answers, student);
+        return ResponseEntity.ok("Quiz Submitted! You earned " + xpEarned + " XP.");
+    }
 }
