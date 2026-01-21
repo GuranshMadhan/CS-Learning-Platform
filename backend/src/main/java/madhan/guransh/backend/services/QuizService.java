@@ -111,4 +111,6 @@ public class QuizService {
 
         return xpEarned;
     }
+
+    // TODO: Fix infinite xp exploit by tracking quiz attempts per user
 }
