@@ -1,10 +1,10 @@
 import React from 'react';
+import Login from './components/Login';
 
 function App() {
   return (
-    <div style={{ padding: '50px', textAlign: 'center' }}>
-      <h1>CS Learning Platform</h1>
-      <p>Frontend is running!</p>
+    <div>
+      <Login />
     </div>
   );
 }
