@@ -26,57 +26,30 @@ public class AuthenticationService {
     private final UserRepository userRepository;
 
     public AuthenticationResponse register(RegisterRequest request) {
-        // 1. Create and Save the User
         var user = User.builder()
-                .username(request.getFirstname())
-                .email(request.getEmail())
+                .username(request.getUsername()) // Save Display Name
+                .email(request.getEmail())       // Save Login Email
                 .password(passwordEncoder.encode(request.getPassword()))
-                .role(Roles.USER) // Everyone starts as USER
+                .role(Roles.USER)
+                .xp(0)
+                .totalCorrectAnswers(0)
                 .build();
 
-        var savedUser = userRepository.save(user);
-
-        // 2. Logic: Join Existing Group
-        if (request.getPortalCode() != null && !request.getPortalCode().isEmpty()) {
-            var classroom = classroomRepository.findByPortalCode(request.getPortalCode())
-                    .orElseThrow(() -> new RuntimeException("Invalid Portal Code"));
-
-            // Add to students list
-            classroom.getStudents().add(savedUser);
-            classroomRepository.save(classroom);
-        }
-
-        // 3. Logic: Create New Group
-        else if (request.getGroupName() != null && !request.getGroupName().isEmpty()) {
-            Classroom newClassroom = new Classroom();
-            newClassroom.setName(request.getGroupName());
-            newClassroom.setTeacher(savedUser); // The creator is the Admin/Teacher
-            classroomRepository.save(newClassroom);
-        }
-
-        // 4. Generate Token
+        repository.save(user);
         var jwtToken = jwtService.generateToken(user);
         return AuthenticationResponse.builder().token(jwtToken).build();
     }
 
     public AuthenticationResponse authenticate(AuthenticationRequest request) {
-        // 1. Authenticate the user credentials
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
-                        request.getEmail(),
+                        request.getEmail(), // Login with Email
                         request.getPassword()
                 )
         );
-
-        // 2. If we get here, the user is valid. Now we find them in the DB.
-        var user = repository.findByEmail(request.getEmail())
-                .orElseThrow(); 
-
-        // 3. Generate a fresh token
+        var user = repository.findByEmail(request.getEmail()) // Look up by Email
+                .orElseThrow();
         var jwtToken = jwtService.generateToken(user);
-
-        return AuthenticationResponse.builder()
-                .token(jwtToken)
-                .build();
+        return AuthenticationResponse.builder().token(jwtToken).build();
     }
 }

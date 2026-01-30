@@ -9,7 +9,9 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Builder
 @Table(name = "users")
@@ -24,6 +26,7 @@ public class User implements UserDetails {
     private Long id;
     @Column(unique = true)
     private String username;
+    @Column(unique = true)
     private String email;
     private String password;
 
@@ -31,16 +34,13 @@ public class User implements UserDetails {
     private Roles role;
 
     private int xp = 0;
+    private int totalCorrectAnswers = 0;
 
-    // if the user is a teacher
-    @OneToMany(mappedBy = "teacher")
-    @JsonIgnore
-    private List<Classroom> teachingClassrooms;
+    @ManyToMany(fetch = FetchType.EAGER)
+    private Set<Classroom> enrolledClassrooms = new HashSet<>();
 
-    // if the user is a student
-    @ManyToMany(mappedBy = "students")
-    @JsonIgnore
-    private List<Classroom> enrolledClassrooms;
+    @OneToMany(mappedBy = "teacher", fetch = FetchType.EAGER)
+    private Set<Classroom> teachingClassrooms = new HashSet<>();
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

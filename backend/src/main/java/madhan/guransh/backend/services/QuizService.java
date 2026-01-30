@@ -100,6 +100,7 @@ public class QuizService {
         // Logic: You get the Quiz Bonus ONLY if you get everything right (or maybe > 50%?)
 
         int xpEarned = correctCount * 10; // 10 XP per correct question
+        student.setTotalCorrectAnswers(student.getTotalCorrectAnswers() + correctCount);
 
         if (correctCount == totalQuestions) {
             xpEarned += quiz.getCompletionBonusXp(); // Add the 50 XP bonus for perfect score

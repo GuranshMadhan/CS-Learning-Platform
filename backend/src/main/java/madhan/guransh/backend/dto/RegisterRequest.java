@@ -10,13 +10,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class RegisterRequest {
-    private String firstname;
+    private String username;
     private String email;
     private String password;
-
-    // Scenario A: Joining a group
-    private String portalCode;
-
-    // Scenario B: Creating a group (New field)
-    private String groupName;
 }
