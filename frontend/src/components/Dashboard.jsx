@@ -3,118 +3,142 @@ import { useNavigate } from 'react-router-dom';
 import api from '../api/axiosConfig';
 import QuizList from './QuizList';
 import JoinClass from './JoinClass';
+import CreateClass from './CreateClass';
+import PracticeMode from './PracticeMode'; // <--- UPDATED IMPORT
 
 const Dashboard = () => {
     const [user, setUser] = useState(null);
-    const [selectedClass, setSelectedClass] = useState(null); // <--- NEW: Track which class is active
+    const [view, setView] = useState('LOBBY'); // LOBBY, ROOM, PRACTICE
+    const [selectedClass, setSelectedClass] = useState(null);
     const navigate = useNavigate();
 
     const loadUserData = async () => {
         try {
             const response = await api.get('/user/me');
             setUser(response.data);
-            
-            // OPTIONAL: If they are in exactly ONE class total, auto-select it for convenience
-            const totalClasses = response.data.enrolledClassrooms.length + response.data.teachingClassrooms.length;
-            if (totalClasses === 1) {
-                if (response.data.enrolledClassrooms.length > 0) setSelectedClass(response.data.enrolledClassrooms[0]);
-                else setSelectedClass(response.data.teachingClassrooms[0]);
-            }
-
         } catch (error) {
-            console.error("Failed to load user", error);
             localStorage.removeItem('token');
             navigate('/');
         }
     };
 
-    useEffect(() => {
-        loadUserData();
-    }, []);
+    useEffect(() => { loadUserData(); }, []);
 
-    const handleLogout = () => {
-        localStorage.removeItem('token');
-        navigate('/');
+    const enterClass = (c) => {
+        setSelectedClass(c);
+        setView('ROOM');
     };
 
-    if (!user) return <div style={{ padding: '20px' }}>Loading...</div>;
+    const goHome = () => {
+        setSelectedClass(null);
+        setView('LOBBY');
+        loadUserData(); 
+    };
 
-    // HELPER: Reset selection to go back to "Lobby"
-    const handleBackToLobby = () => setSelectedClass(null);
+    if (!user) return <div className="dashboard-container">Loading...</div>;
 
     return (
-        <div style={{ padding: '20px', maxWidth: '800px', margin: '0 auto', fontFamily: 'Arial, sans-serif' }}>
-            {/* Header */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
-                <h1 style={{ margin: 0 }}>Student Dashboard</h1>
-                <button onClick={handleLogout} style={{ padding: '8px 16px', background: '#dc3545', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
+        <div className="dashboard-container">
+            {/* HEADER */}
+            <div className="dashboard-header">
+                <div>
+                    <h1>Dashboard</h1>
+                    <p style={{ color: 'var(--text-secondary)' }}>
+                        User: <span style={{ color: 'white' }}>{user.username}</span>
+                    </p>
+                </div>
+                <button onClick={() => { localStorage.removeItem('token'); navigate('/'); }} className="btn-logout">
                     Logout
                 </button>
             </div>
 
-            <h2 style={{ color: '#555' }}>Welcome, {user.firstname}!</h2>
-
-            {/* Stats Row */}
-            <div style={{ display: 'flex', gap: '20px', marginBottom: '40px' }}>
-                <div style={{ flex: 1, padding: '20px', background: 'linear-gradient(135deg, #6a11cb 0%, #2575fc 100%)', borderRadius: '10px', color: 'white', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}>
-                    <h3 style={{ margin: 0, opacity: 0.8 }}>Total XP</h3>
-                    <p style={{ fontSize: '2.5rem', margin: '10px 0', fontWeight: 'bold' }}>{user.xp}</p>
+            {/* STATS */}
+            <div className="stats-grid">
+                <div className="stat-card xp">
+                    <div className="stat-label">Total XP</div>
+                    <div className="stat-value">{user.xp}</div>
                 </div>
-                <div style={{ flex: 1, padding: '20px', background: 'linear-gradient(135deg, #11998e 0%, #38ef7d 100%)', borderRadius: '10px', color: 'white', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}>
-                    <h3 style={{ margin: 0, opacity: 0.8 }}>Questions Correct</h3>
-                    <p style={{ fontSize: '2.5rem', margin: '10px 0', fontWeight: 'bold' }}>{user.totalCorrectAnswers}</p>
+                <div className="stat-card correct">
+                    <div className="stat-label">Questions Correct</div>
+                    <div className="stat-value">{user.totalCorrectAnswers}</div>
                 </div>
             </div>
 
-            <hr style={{ margin: '20px 0' }} />
+            <hr style={{ borderColor: '#334155', margin: '2rem 0', opacity: 0.5 }} />
 
-            {/* LOGIC: Either show the Class List (Lobby) OR the Selected Class (Room) */}
-            {!selectedClass ? (
-                // --- VIEW 1: THE LOBBY (Class Selector) ---
-                <div>
-                    <h3>Your Classrooms</h3>
+            {/* VIEWS */}
+            {view === 'LOBBY' && (
+                <div className="lobby-view">
                     
-                    {/* List Enrolled Classes */}
-                    {user.enrolledClassrooms.length > 0 && (
-                        <div style={{ marginBottom: '20px' }}>
-                            <h4 style={{ color: '#666' }}>Student In:</h4>
-                            {user.enrolledClassrooms.map(c => (
-                                <div key={c.id} onClick={() => setSelectedClass(c)} 
-                                     style={{ padding: '15px', background: '#f8f9fa', border: '1px solid #ddd', borderRadius: '8px', cursor: 'pointer', marginBottom: '10px' }}>
-                                    <strong>{c.name}</strong> (ID: {c.id})
-                                </div>
-                            ))}
-                        </div>
-                    )}
-
-                    {/* List Teaching Classes */}
-                    {user.teachingClassrooms.length > 0 && (
-                        <div style={{ marginBottom: '20px' }}>
-                            <h4 style={{ color: '#666' }}>Teaching:</h4>
-                            {user.teachingClassrooms.map(c => (
-                                <div key={c.id} onClick={() => setSelectedClass(c)} 
-                                     style={{ padding: '15px', background: '#e3f2fd', border: '1px solid #90caf9', borderRadius: '8px', cursor: 'pointer', marginBottom: '10px' }}>
-                                    <strong>{c.name}</strong> (Teacher)
-                                </div>
-                            ))}
-                        </div>
-                    )}
-
-                    {/* Join Class Form is always available in Lobby */}
-                    <JoinClass onJoinSuccess={loadUserData} />
-                </div>
-            ) : (
-                // --- VIEW 2: INSIDE A CLASSROOM ---
-                <div>
-                    <button onClick={handleBackToLobby} style={{ marginBottom: '15px', cursor: 'pointer', background: 'none', border: 'none', color: '#007bff', textDecoration: 'underline' }}>
-                        &larr; Back to Classrooms
-                    </button>
-                    
-                    <div style={{ padding: '10px', background: '#fff3cd', border: '1px solid #ffeeba', borderRadius: '5px', marginBottom: '20px' }}>
-                        You are viewing: <strong>{selectedClass.name}</strong>
+                    {/* === INFINITE PRACTICE === */}
+                    <div 
+                        onClick={() => setView('PRACTICE')}
+                        style={{ 
+                            background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)', 
+                            border: '1px solid #334155', 
+                            borderRadius: '12px',
+                            padding: '2rem',
+                            textAlign: 'center',
+                            cursor: 'pointer',
+                            marginBottom: '3rem',
+                            transition: 'transform 0.2s'
+                        }}
+                        onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.01)'}
+                        onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}
+                    >
+                        <h2 style={{ color: 'white', margin: 0 }}>Start Practice Session</h2>
+                        <p style={{ color: '#94a3b8', marginTop: '10px' }}>
+                            Answer random questions to earn XP and improve your rating.
+                        </p>
                     </div>
 
+                    <h3 style={{ marginBottom: '1.5rem', color: 'var(--accent-blue)' }}>My Classrooms</h3>
+                    
+                    {/* Enrolled */}
+                    {user.enrolledClassrooms.map(c => (
+                        <div key={c.id} onClick={() => enterClass(c)} className="classroom-card">
+                            <div>
+                                <strong>{c.name}</strong>
+                                <div style={{ fontSize: '0.8rem', color: '#94a3b8' }}>Class ID: {c.id}</div>
+                            </div>
+                            <span style={{ color: 'var(--accent-green)' }}>Enter &rarr;</span>
+                        </div>
+                    ))}
+
+                    {/* Teaching */}
+                    {user.teachingClassrooms.map(c => (
+                        <div key={c.id} onClick={() => enterClass(c)} className="classroom-card" style={{ borderColor: 'var(--accent-blue)' }}>
+                            <div>
+                                <strong>{c.name}</strong>
+                                <div style={{ fontSize: '0.8rem', color: 'var(--accent-blue)' }}>Teacher Access</div>
+                            </div>
+                            <span style={{ color: 'var(--accent-blue)' }}>Manage &rarr;</span>
+                        </div>
+                    ))}
+
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginTop: '3rem' }}>
+                        <JoinClass onJoinSuccess={loadUserData} />
+                        <CreateClass onCreateSuccess={loadUserData} />
+                    </div>
+                </div>
+            )}
+
+            {view === 'ROOM' && (
+                <div className="room-view">
+                    <button onClick={goHome} style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', marginBottom: '1rem' }}>
+                        &larr; Back to Dashboard
+                    </button>
+                    <h2 style={{ color: 'white' }}>{selectedClass.name}</h2>
                     <QuizList classroomId={selectedClass.id} />
+                </div>
+            )}
+
+            {view === 'PRACTICE' && (
+                <div className="mining-view">
+                     <button onClick={goHome} style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', marginBottom: '1rem' }}>
+                        &larr; End Session
+                    </button>
+                    <PracticeMode /> 
                 </div>
             )}
         </div>

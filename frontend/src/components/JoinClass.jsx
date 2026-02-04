@@ -9,32 +9,36 @@ const JoinClass = ({ onJoinSuccess }) => {
         e.preventDefault();
         try {
             await api.post('/classrooms/join', { code: code });
-            setMessage("Joined successfully!");
+            setMessage("Access Granted: Portal Unlocked");
+            setCode('');
             if (onJoinSuccess) onJoinSuccess();
+            setTimeout(() => setMessage(''), 3000);
         } catch (error) {
             console.error(error);
-            setMessage("Invalid Portal Code.");
+            setMessage("Access Denied: Invalid Portal Code");
         }
     };
 
     return (
-        <div style={{ marginTop: '20px', padding: '20px', background: '#f8f9fa', border: '1px solid #ddd', borderRadius: '8px' }}>
-            <h3>Join a Classroom</h3>
-            <p>Enter the portal code provided by your teacher.</p>
-            <form onSubmit={handleJoin} style={{ display: 'flex', gap: '10px' }}>
+        <div style={{ padding: '1.5rem', background: '#1e293b', border: '1px solid #334155', borderRadius: '8px', height: '100%' }}>
+            <h4 style={{ color: 'var(--text-secondary)', marginBottom: '10px', textTransform: 'uppercase' }}>Join Existing Portal</h4>
+            <p style={{ fontSize: '0.85rem', color: '#64748b', marginBottom: '15px' }}>
+                Enter a code to access a restricted environment.
+            </p>
+            <form onSubmit={handleJoin} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                 <input 
                     type="text" 
-                    placeholder="Portal Code"
+                    placeholder="Enter Portal Code"
                     value={code}
                     onChange={(e) => setCode(e.target.value)}
                     required
-                    style={{ padding: '8px', width: '200px' }}
+                    className="input-field"
                 />
-                <button type="submit" style={{ padding: '8px 16px', cursor: 'pointer', background: '#007bff', color: 'white', border: 'none', borderRadius: '4px' }}>
-                    Join
+                <button type="submit" className="btn-primary" style={{ background: '#334155' }}>
+                    JOIN PORTAL
                 </button>
             </form>
-            {message && <p style={{ marginTop: '10px', color: message.includes('Invalid') ? 'red' : 'green' }}>{message}</p>}
+            {message && <p style={{ marginTop: '10px', fontSize: '0.9rem', color: message.includes('Denied') ? 'var(--accent-red)' : 'var(--accent-green)' }}>{message}</p>}
         </div>
     );
 };

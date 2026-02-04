@@ -6,77 +6,62 @@ const Login = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [message, setMessage] = useState('');
-    
-    // Initialize the hook
     const navigate = useNavigate();
 
     const handleLogin = async (e) => {
         e.preventDefault();
-        setMessage(""); // Clear previous errors
+        setMessage("");
         
         try {
-            console.log("Attempting login...");
-            const response = await api.post('/auth/authenticate', {
-                email: email,
-                password: password
-            });
-
-            console.log("Login success! Token received.");
-
-            // 1. Save Token
-            localStorage.setItem('token', response.data.token);
+            const response = await api.post('/auth/authenticate', { email, password });
             
-            // 2. IMMEDIATE Redirect (No timeout needed for login)
-            // Using 'replace: true' prevents them from clicking "Back" to return to login
-            navigate('/dashboard', { replace: true }); 
+            // Save token and redirect
+            localStorage.setItem('token', response.data.token);
+            navigate('/dashboard', { replace: true });
 
         } catch (error) {
-            console.error("Login Error:", error);
-            setMessage("Login Failed. Check credentials.");
+            console.error("Login Failed", error);
+            setMessage("Access Denied. Invalid credentials.");
         }
     };
 
     return (
-        <div style={{ maxWidth: '400px', margin: '50px auto', padding: '20px', border: '1px solid #ccc', borderRadius: '8px', fontFamily: 'Arial, sans-serif' }}>
-            <h2 style={{ textAlign: 'center', color: '#333' }}>Login</h2>
-            
+        <div className="auth-container">
+            <h2>SYSTEM LOGIN</h2>
+            <p className="subtitle">Enter your credentials to access the mainframe.</p>
+
             <form onSubmit={handleLogin}>
-                <div style={{ marginBottom: '15px' }}>
-                    <label style={{ display: 'block', marginBottom: '5px' }}>Email:</label>
+                <div className="form-group">
+                    <label>Email Address</label>
                     <input 
+                        className="input-field"
                         type="email" 
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         required 
-                        placeholder="john@example.com"
-                        style={{ width: '100%', padding: '8px', boxSizing: 'border-box' }}
+                        placeholder="user@example.com"
                     />
                 </div>
 
-                <div style={{ marginBottom: '20px' }}>
-                    <label style={{ display: 'block', marginBottom: '5px' }}>Password:</label>
+                <div className="form-group">
+                    <label>Password</label>
                     <input 
+                        className="input-field"
                         type="password" 
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         required 
-                        placeholder="Enter your password"
-                        style={{ width: '100%', padding: '8px', boxSizing: 'border-box' }}
+                        placeholder="••••••••"
                     />
                 </div>
 
-                <button type="submit" style={{ width: '100%', padding: '10px', background: '#007bff', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '16px' }}>
-                    Login
-                </button>
+                <button type="submit" className="btn-primary">Authenticate</button>
             </form>
 
-            {message && <p style={{ marginTop: '15px', color: 'red', textAlign: 'center' }}>{message}</p>}
+            {message && <p className="error-msg">{message}</p>}
 
-            <div style={{ marginTop: '20px', textAlign: 'center', fontSize: '0.9rem' }}>
-                <p>Don't have an account?</p>
-                <Link to="/register" style={{ color: '#007bff', textDecoration: 'none', fontWeight: 'bold' }}>
-                    Create an Account
-                </Link>
+            <div style={{ marginTop: '20px', fontSize: '0.9rem', color: '#64748b' }}>
+                No account? <Link to="/register" className="link-text">Initialize Registration</Link>
             </div>
         </div>
     );

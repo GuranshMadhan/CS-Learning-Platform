@@ -2,6 +2,7 @@ package madhan.guransh.backend.controllers;
 
 import lombok.RequiredArgsConstructor;
 import madhan.guransh.backend.model.User;
+import madhan.guransh.backend.repository.UserRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -19,6 +20,8 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class UserController {
 
+    private UserRepository userRepository;
+    
     @GetMapping("/me")
     public ResponseEntity<Map<String, Object>> getCurrentUser(@AuthenticationPrincipal User user) {
         Map<String, Object> response = new HashMap<>();
@@ -55,5 +58,9 @@ public class UserController {
         response.put("teachingClassrooms", teachingList);
 
         return ResponseEntity.ok(response);
+    }
+    @GetMapping("/leaderboard")
+    public ResponseEntity<List<User>> getLeaderboard() {
+        return ResponseEntity.ok(userRepository.findTop10ByOrderByXpDesc());
     }
 }

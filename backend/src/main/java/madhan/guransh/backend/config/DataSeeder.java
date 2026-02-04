@@ -19,31 +19,34 @@ public class DataSeeder implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-        // 1. Check if we already have data
+        // Only seed if the database is empty
         if (questionRepository.count() == 0) {
-            System.out.println("🌱 Seeding Database...");
-
+            System.out.println("🌱 Seeding Global Questions...");
 
             ObjectMapper mapper = new ObjectMapper();
-
-            // 3. GET THE FILE
+            // Make sure questions.json is in src/main/resources/
             InputStream inputStream = TypeReference.class.getResourceAsStream("/questions.json");
 
-            // Safety check
-            if (inputStream == null) {
-                System.out.println("❌ ERROR: Could not find questions.json in resources folder!");
-                return;
+            try {
+                if (inputStream == null) {
+                    System.out.println("⚠️ Warning: questions.json not found!");
+                    return;
+                }
+
+                List<Question> questions = mapper.readValue(inputStream, new TypeReference<List<Question>>() {});
+
+                // Ensure they are marked as 'Global' (null classroom/quiz)
+                questions.forEach(q -> {
+                    q.setClassroom(null);
+                    q.setQuiz(null);
+                });
+
+                questionRepository.saveAll(questions);
+                System.out.println("✅ Questions Seeded Successfully!");
+            } catch (Exception e) {
+                System.out.println("❌ Seeding Failed: " + e.getMessage());
+                e.printStackTrace();
             }
-
-            // 4. Convert the JSON text inside the file into Java Objects
-            List<Question> questions = mapper.readValue(inputStream, new TypeReference<List<Question>>(){});
-
-            // 5. Save to Database
-            questionRepository.saveAll(questions);
-
-            System.out.println("✅ Seeding Complete: Added " + questions.size() + " questions.");
-        } else {
-            System.out.println("⚡ Database already has data. Skipping seed.");
         }
     }
 }

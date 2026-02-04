@@ -9,12 +9,12 @@ import java.util.Optional;
 
 public interface QuestionRepository extends JpaRepository<Question, Long> {
 
-    Optional<Question> findById(Long id);
-
-    List<Question> findByQuizId(Long quizId);
-
-    // List questions for infinite mode
-    @Query("SELECT q FROM Question q WHERE q.classroom IS NULL")
+    // 1. Fetch Global Questions (Where Classroom is NULL) randomly
+    // changed to nativeQuery = true to use Postgres RANDOM()
+    @Query(value = "SELECT * FROM questions WHERE classroom_id IS NULL ORDER BY RANDOM() LIMIT 20", nativeQuery = true)
     List<Question> findAllRandomGlobalQuestions();
+
+    // 2. Fetch questions for a specific quiz
+    List<Question> findByQuizId(Long quizId);
 
 }
