@@ -2,7 +2,7 @@ package madhan.guransh.backend.dto;
 
 import lombok.Builder;
 import lombok.Data;
-import madhan.guransh.backend.enums.Roles;
+import madhan.guransh.backend.enums.Role;
 
 import java.util.List;
 
@@ -12,7 +12,7 @@ public class DashboardResponse {
     private String username;
     private String email;
     private int xp;
-    private Roles role; // Change to String if you are still using String for roles
+    private Role role; // Change to String if you are still using String for roles
 
     // We send the full list so the frontend can show "My Classes"
     private List<ClassroomSummary> enrolledClassrooms;

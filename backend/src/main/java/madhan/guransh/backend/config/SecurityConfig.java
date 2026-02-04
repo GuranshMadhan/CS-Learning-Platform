@@ -1,7 +1,6 @@
 package madhan.guransh.backend.config;
 
 import lombok.RequiredArgsConstructor;
-import madhan.guransh.backend.enums.Roles;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationProvider;

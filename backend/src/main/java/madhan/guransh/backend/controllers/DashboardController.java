@@ -2,14 +2,11 @@ package madhan.guransh.backend.controllers;
 
 import lombok.RequiredArgsConstructor;
 import madhan.guransh.backend.dto.DashboardResponse;
+import madhan.guransh.backend.enums.Role;
 import madhan.guransh.backend.model.Classroom;
 import madhan.guransh.backend.model.User;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -40,7 +37,7 @@ public class DashboardController {
                 .username(user.getUsername()) // or .getFirstname()
                 .email(user.getEmail())
                 .xp(user.getXp())
-                .role(user.getRole())
+                .role(Role.USER)
                 .enrolledClassrooms(enrolled)
                 .teachingClassrooms(teaching)
                 .build();

@@ -58,26 +58,24 @@ public class QuestionService {
      * Returns true if correct, false if incorrect.
      */
     public boolean submitAnswer(Long userId, Long questionId, String userAnswer) {
-        // 1. Find the question (safely)
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
         Question question = questionRepository.findById(questionId)
                 .orElseThrow(() -> new RuntimeException("Question not found"));
 
-        // 2. Normalize answers (trim spaces, ignore case) to be forgiving
-        // Assumes your database stores "correctAnswer" as the raw string value
+        // 1. Always increment attempt count
+        user.setTotalQuestionsAttempted(user.getTotalQuestionsAttempted() + 1);
+
+        // 2. Check correctness
         boolean isCorrect = question.getCorrectAnswer().trim().equalsIgnoreCase(userAnswer.trim());
 
-        // 3. If correct, Award XP
         if (isCorrect) {
-            User user = userRepository.findById(userId)
-                    .orElseThrow(() -> new RuntimeException("User not found"));
-
-            // Add the XP value of this specific question
             user.setXp(user.getXp() + question.getXpValue());
-
-            // Save the progress
-            userRepository.save(user);
+            user.setTotalCorrectAnswers(user.getTotalCorrectAnswers() + 1);
         }
 
+        userRepository.save(user); // Save attempts and XP
         return isCorrect;
     }
 

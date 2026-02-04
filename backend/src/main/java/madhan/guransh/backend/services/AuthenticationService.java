@@ -4,8 +4,7 @@ import lombok.RequiredArgsConstructor;
 import madhan.guransh.backend.dto.AuthenticationRequest;
 import madhan.guransh.backend.dto.AuthenticationResponse;
 import madhan.guransh.backend.dto.RegisterRequest;
-import madhan.guransh.backend.enums.Roles;
-import madhan.guransh.backend.model.Classroom;
+import madhan.guransh.backend.enums.Role;
 import madhan.guransh.backend.repository.ClassroomRepository;
 import madhan.guransh.backend.repository.UserRepository;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -30,7 +29,7 @@ public class AuthenticationService {
                 .username(request.getUsername()) // Save Display Name
                 .email(request.getEmail())       // Save Login Email
                 .password(passwordEncoder.encode(request.getPassword()))
-                .role(Roles.USER)
+                .role(Role.USER)
                 .xp(0)
                 .totalCorrectAnswers(0)
                 .build();

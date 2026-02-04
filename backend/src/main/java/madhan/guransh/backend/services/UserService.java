@@ -1,6 +1,6 @@
 package madhan.guransh.backend.services;
 
-import madhan.guransh.backend.enums.Roles;
+import madhan.guransh.backend.enums.Role;
 import madhan.guransh.backend.model.Classroom;
 import madhan.guransh.backend.model.User;
 import madhan.guransh.backend.repository.ClassroomRepository;
@@ -39,7 +39,7 @@ public class UserService {
         User newUser = new User();
         newUser.setUsername(username);
         newUser.setPassword(passwordEncoder.encode(password));
-        newUser.setRole(Roles.valueOf(role));
+        newUser.setRole(Role.valueOf(role));
         newUser.setXp(0);
 
         // 2. LOGIC: If they are a Student, handle the Class Join Code
