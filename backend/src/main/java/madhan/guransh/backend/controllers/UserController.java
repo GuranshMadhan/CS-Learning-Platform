@@ -43,7 +43,7 @@ public class UserController {
     private UserDTO mapToDTO(User user) {
         UserDTO dto = new UserDTO();
         dto.setId(user.getId());
-        dto.setUsername(user.getUsername());
+        dto.setUsername(user.getDisplayName());
         dto.setEmail(user.getEmail());
         dto.setRole(user.getRole().name());
 
@@ -64,7 +64,25 @@ public class UserController {
             dto.setAccuracy(0.0);
         }
 
-        // ... existing classroom mapping code ...
+        dto.setEnrolledClassrooms(user.getEnrolledClassrooms().stream()
+                .map(c -> {
+                    ClassroomDTO cd = new ClassroomDTO();
+                    cd.setId(c.getId());
+                    cd.setName(c.getName());
+                    cd.setPortalCode(c.getPortalCode());
+                    if(c.getTeacher() != null) cd.setTeacherName(c.getTeacher().getDisplayName()); // Fix teacher name too
+                    return cd;
+                }).collect(Collectors.toList()));
+
+        dto.setTeachingClassrooms(user.getTeachingClassrooms().stream()
+                .map(c -> {
+                    ClassroomDTO cd = new ClassroomDTO();
+                    cd.setId(c.getId());
+                    cd.setName(c.getName());
+                    cd.setPortalCode(c.getPortalCode());
+                    return cd;
+                }).collect(Collectors.toList()));
+
         return dto;
     }
 }

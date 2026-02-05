@@ -33,7 +33,6 @@ public class UserService {
                 throw new RuntimeException("Invalid Teacher Secret! You cannot register as staff.");
             }
             // If the code matches, we allow it.
-            // (Teachers don't "join" classes, so we stop here).
         }
 
         User newUser = new User();
@@ -49,9 +48,6 @@ public class UserService {
             if (classOpt.isPresent()) {
                 Classroom classroom = classOpt.get();
 
-                // Link the student to the classroom
-                // (Ideally, you add the user to the classroom's student list)
-                // We will handle this link logic when we set up the ManyToMany save
             } else {
                 // Ideally, throw an error or just warn them
                 System.out.println("Warning: Student entered invalid class code.");

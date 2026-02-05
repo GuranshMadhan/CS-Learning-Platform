@@ -7,8 +7,7 @@ POST http://localhost:8080/api/v1/auth/register
 Content-Type: application/json
 
 {
-  "firstname": "Grind",
-  "lastname": "Master",
+  "username": "GrindMaster",
   "email": "grinder@test.com",
   "password": "password123",
   "role": "USER"
@@ -40,8 +39,7 @@ POST http://localhost:8080/api/v1/auth/register
 Content-Type: application/json
 
 {
-  "firstname": "Mr",
-  "lastname": "Smith",
+  "username": "MrSmith",
   "email": "teacher@school.com",
   "password": "password123",
   "role": "ADMIN"
@@ -59,10 +57,11 @@ Content-Type: application/json
   "name": "CS 101 - Intro to Java"
 }
 > {%
-    // SAVE THE PORTAL CODE
+    // SAVE THE PORTAL CODE AND ID
     client.global.set("portal_code", response.body.portalCode);
     client.global.set("classroom_id", response.body.id);
     client.log("Generated Class ID: " + response.body.id);
+    client.log("Generated Portal Code: " + response.body.portalCode);
 %}
 
 ### 6. Register a STUDENT (Jimmy)
@@ -70,8 +69,7 @@ POST http://localhost:8080/api/v1/auth/register
 Content-Type: application/json
 
 {
-  "firstname": "Jimmy",
-  "lastname": "Student",
+  "username": "JimmyStudent",
   "email": "jimmy@school.com",
   "password": "password123",
   "role": "USER"
@@ -99,6 +97,9 @@ Content-Type: application/json
   "title": "Week 1: Java Basics",
   "description": "Test your knowledge of variables and loops."
 }
+> {%
+    client.global.set("quiz_id", response.body.id);
+%}
 
 ### 9. Student Checks for Quizzes
 GET http://localhost:8080/api/v1/quizzes/classroom/{{classroom_id}}
@@ -110,7 +111,7 @@ Authorization: Bearer {{teacher_token}}
 Content-Type: application/json
 
 {
-  "quizId": 1,
+  "quizId": {{quiz_id}},
   "content": "What is the capital of France?",
   "option1": "London",
   "option2": "Berlin",
@@ -118,12 +119,15 @@ Content-Type: application/json
   "option4": "Madrid",
   "correctAnswer": "Paris"
 }
+> {%
+    client.global.set("quiz_question_id", response.body.id);
+%}
 
 ### 11. Student Submits the Quiz
-POST http://localhost:8080/api/v1/quizzes/1/submit
+POST http://localhost:8080/api/v1/quizzes/{{quiz_id}}/submit
 Authorization: Bearer {{student_token}}
 Content-Type: application/json
 
 {
-  "question_4": "Paris"
+  "question_{{quiz_question_id}}": "Paris"
 }

@@ -70,7 +70,7 @@ public class User implements UserDetails {
 
     // 2. Helper to get the actual display name if needed
     public String getDisplayName() {
-        return username;
+        return this.username;
     }
 
     @Builder.Default
