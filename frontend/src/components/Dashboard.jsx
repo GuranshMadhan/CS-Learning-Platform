@@ -2,11 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../api/axiosConfig';
 
+// Child Components
 import QuizList from './QuizList';
 import JoinClass from './JoinClass';
 import CreateClass from './CreateClass';
 import PracticeMode from './PracticeMode';
 import Leaderboard from './Leaderboard';
+import ManageClass from './ManageClass'; // <--- The new Teacher Console
 
 const Dashboard = () => {
     const [user, setUser] = useState(null);
@@ -14,14 +16,15 @@ const Dashboard = () => {
     const [selectedClass, setSelectedClass] = useState(null);
     const navigate = useNavigate();
 
+    // --- 1. Load User Data ---
     const loadUserData = async () => {
         try {
             const response = await api.get('/user/me');
-            console.log("User Data Loaded:", response.data); // Debugging Log
+            console.log("User Data Loaded:", response.data);
             setUser(response.data);
         } catch (error) {
             console.error("Failed to load user", error);
-            // Only redirect if it's a 403/401 (Auth error), not a 500 (Server error)
+            // Redirect only on Auth Failure (401/403), not Server Error (500)
             if (error.response && (error.response.status === 401 || error.response.status === 403)) {
                 localStorage.removeItem('token');
                 navigate('/');
@@ -31,20 +34,21 @@ const Dashboard = () => {
 
     useEffect(() => { loadUserData(); }, []);
 
+    // --- 2. Navigation Handlers ---
     const enterClass = (c) => { setSelectedClass(c); setView('ROOM'); };
     const goHome = () => { setSelectedClass(null); setView('LOBBY'); loadUserData(); };
 
-    // Loading State
+    // --- 3. Loading State ---
     if (!user) {
         return (
             <div style={{ textAlign: 'center', marginTop: '50px', color: '#64748b' }}>
                 <h2>Establishing Uplink...</h2>
-                <p>If this takes too long, check the Backend Console for errors.</p>
+                <p>Connecting to Guransh System...</p>
             </div>
         );
     }
 
-    // SAFE VARIABLES (Prevents Blank Screen Crash)
+    // --- 4. Safety Variables (Prevents Crash on Null Data) ---
     const safeRank = user.rank || 0;
     const safeXP = user.xp || 0;
     const safeAccuracy = user.accuracy || 0;
@@ -56,17 +60,17 @@ const Dashboard = () => {
 
     return (
         <div className="dashboard-container">
-            {/* HEADER */}
+            {/* TOP BAR */}
             <div className="dashboard-header">
                 <div style={{ fontWeight: 'bold', letterSpacing: '2px', color: '#94a3b8' }}>GURANSH SYSTEM v1.0</div>
                 <button onClick={() => { localStorage.removeItem('token'); navigate('/'); }} className="btn-logout">LOGOUT</button>
             </div>
 
-            {/* MAIN LOBBY */}
+            {/* === VIEW 1: MAIN LOBBY === */}
             {view === 'LOBBY' && (
                 <div className="lobby-view">
                     
-                    {/* === OPERATOR CARD === */}
+                    {/* OPERATOR STAT CARD */}
                     <div style={{ 
                         background: 'linear-gradient(145deg, #1e293b, #0f172a)', 
                         border: '1px solid #334155', 
@@ -78,11 +82,12 @@ const Dashboard = () => {
                         position: 'relative',
                         overflow: 'hidden'
                     }}>
-                        {/* Decorative Rank BG */}
+                        {/* Background Rank Watermark */}
                         <div style={{ position: 'absolute', top: -20, right: -20, fontSize: '150px', opacity: 0.05, userSelect: 'none' }}>
                             {safeRank > 0 && safeRank <= 3 ? '🏆' : '#'}
                         </div>
 
+                        {/* User Header */}
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
                             <div>
                                 <h2 style={{ color: 'white', margin: 0, fontSize: '2rem' }}>{user.username}</h2>
@@ -98,7 +103,7 @@ const Dashboard = () => {
                             </div>
                         </div>
 
-                        {/* STATS GRID */}
+                        {/* Stats Grid */}
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '15px', background: 'rgba(0,0,0,0.2)', padding: '20px', borderRadius: '12px' }}>
                             <div>
                                 <div style={{ color: '#94a3b8', fontSize: '0.8rem' }}>Total XP</div>
@@ -120,7 +125,7 @@ const Dashboard = () => {
                             </div>
                         </div>
 
-                        {/* ACTION BUTTONS */}
+                        {/* Buttons */}
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginTop: '25px' }}>
                             <button 
                                 onClick={() => setView('PRACTICE')}
@@ -143,6 +148,7 @@ const Dashboard = () => {
                     
                     {/* PORTALS LIST */}
                     <div style={{ display: 'grid', gap: '15px' }}>
+                        {/* 1. Classrooms I am enrolled in (Student) */}
                         {enrolled.map(c => (
                             <div key={c.id} onClick={() => enterClass(c)} className="classroom-card">
                                 <div>
@@ -152,6 +158,8 @@ const Dashboard = () => {
                                 <span style={{ color: 'var(--accent-green)', fontWeight: 'bold' }}>ENTER &rarr;</span>
                             </div>
                         ))}
+                        
+                        {/* 2. Classrooms I am teaching (Admin) */}
                         {teaching.map(c => (
                             <div key={c.id} onClick={() => enterClass(c)} className="classroom-card" style={{ borderLeft: '4px solid var(--accent-blue)' }}>
                                 <div>
@@ -161,6 +169,8 @@ const Dashboard = () => {
                                 <span style={{ color: 'var(--accent-blue)', fontWeight: 'bold' }}>MANAGE &rarr;</span>
                             </div>
                         ))}
+
+                        {/* 3. Empty State */}
                         {enrolled.length === 0 && teaching.length === 0 && (
                             <div style={{ padding: '20px', border: '1px dashed #334155', borderRadius: '8px', textAlign: 'center', color: '#64748b' }}>
                                 No active portals linked. Join or Create one below.
@@ -168,7 +178,7 @@ const Dashboard = () => {
                         )}
                     </div>
 
-                    {/* JOIN / CREATE */}
+                    {/* ACTIONS: JOIN / CREATE */}
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginTop: '3rem' }}>
                         <JoinClass onJoinSuccess={loadUserData} />
                         <CreateClass onCreateSuccess={loadUserData} />
@@ -176,15 +186,35 @@ const Dashboard = () => {
                 </div>
             )}
 
-            {/* --- SUB VIEWS --- */}
+            {/* === VIEW 2: CLASSROOM ROOM === */}
             {view === 'ROOM' && selectedClass && (
                 <div className="room-view">
-                    <button onClick={goHome} style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', marginBottom: '1rem' }}>&larr; BACK TO DASHBOARD</button>
-                    <h2 style={{ color: 'white', marginBottom: '0.5rem' }}>{selectedClass.name}</h2>
-                    <QuizList classroomId={selectedClass.id} />
+                    {/* LOGIC SWITCH: 
+                        If the user is in the 'teachingClassrooms' list for this ID, show Admin View.
+                        Otherwise, show Student View.
+                    */}
+                    {teaching.some(c => c.id === selectedClass.id) ? (
+                        <ManageClass 
+                            classroom={selectedClass} 
+                            onBack={goHome} 
+                        />
+                    ) : (
+                        <>
+                            <button onClick={goHome} style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', marginBottom: '1rem' }}>&larr; BACK TO DASHBOARD</button>
+                            <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', borderBottom: '1px solid #334155', paddingBottom: '20px', marginBottom: '20px'}}>
+                                <div>
+                                    <h2 style={{ color: 'white', margin: 0 }}>{selectedClass.name}</h2>
+                                    <div style={{color: '#64748b', fontSize: '0.9rem'}}>Instructor: {selectedClass.teacherName || 'Unknown'}</div>
+                                </div>
+                                <div style={{ padding: '5px 10px', background: 'var(--accent-green)', color: '#0f172a', borderRadius: '4px', fontSize: '0.8rem', fontWeight: 'bold' }}>STUDENT VIEW</div>
+                            </div>
+                            <QuizList classroomId={selectedClass.id} />
+                        </>
+                    )}
                 </div>
             )}
 
+            {/* === VIEW 3: INFINITE PRACTICE === */}
             {view === 'PRACTICE' && (
                 <div className="practice-view">
                      <button onClick={goHome} style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', marginBottom: '1rem' }}>&larr; EXIT PRACTICE</button>
@@ -192,6 +222,7 @@ const Dashboard = () => {
                 </div>
             )}
 
+            {/* === VIEW 4: LEADERBOARD === */}
             {view === 'LEADERBOARD' && (
                 <div className="leaderboard-view">
                      <button onClick={goHome} style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', marginBottom: '1rem' }}>&larr; BACK TO DASHBOARD</button>
