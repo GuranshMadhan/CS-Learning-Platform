@@ -43,6 +43,9 @@ public class User implements UserDetails {
     @Builder.Default
     private int totalCorrectAnswers = 0;
 
+    @Builder.Default
+    private int totalIncorrectAnswers = 0;
+
     // --- RELATIONSHIPS ---
 
     @OneToMany(mappedBy = "teacher", fetch = FetchType.LAZY)

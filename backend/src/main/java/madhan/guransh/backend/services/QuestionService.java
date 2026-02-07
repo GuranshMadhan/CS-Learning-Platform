@@ -73,6 +73,8 @@ public class QuestionService {
         if (isCorrect) {
             user.setXp(user.getXp() + question.getXpValue());
             user.setTotalCorrectAnswers(user.getTotalCorrectAnswers() + 1);
+        } else {
+            user.setTotalIncorrectAnswers(user.getTotalIncorrectAnswers() + 1);
         }
 
         userRepository.save(user); // Save attempts and XP
