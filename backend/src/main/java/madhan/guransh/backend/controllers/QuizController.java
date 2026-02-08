@@ -43,19 +43,26 @@ public class QuizController {
         return ResponseEntity.ok(quizService.getQuizzesForClassroom(classroomId));
     }
 
-    // 3. Add Question
+    // DELETE QUIZ
+    @DeleteMapping("/{id}")
+    public ResponseEntity<String> deleteQuiz(@PathVariable Long id) {
+        quizService.deleteQuiz(id);
+        return ResponseEntity.ok("Quiz deleted successfully.");
+    }
+
+    // UPDATED ADD QUESTION
     @PostMapping("/add-question")
     public ResponseEntity<Question> addQuestion(@RequestBody Map<String, Object> payload) {
         Long quizId = Long.parseLong(payload.get("quizId").toString());
         String content = (String) payload.get("content");
-        String op1 = (String) payload.get("option1");
-        String op2 = (String) payload.get("option2");
-        String op3 = (String) payload.get("option3");
-        String op4 = (String) payload.get("option4");
         String answer = (String) payload.get("correctAnswer");
+        String type = (String) payload.get("type"); // "MULTIPLE_CHOICE", "CODE", etc.
+
+        // Extract Options List safely
+        List<String> options = (List<String>) payload.get("options");
 
         return ResponseEntity.ok(
-                quizService.addQuestionToQuiz(quizId, content, op1, op2, op3, op4, answer)
+                quizService.addQuestionToQuiz(quizId, content, options, answer, type)
         );
     }
 

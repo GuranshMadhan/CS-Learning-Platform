@@ -3,29 +3,53 @@ import api from '../api/axiosConfig';
 
 const JoinClass = ({ onJoinSuccess }) => {
     const [code, setCode] = useState('');
-    const [message, setMessage] = useState('');
+    const [status, setStatus] = useState({ msg: '', type: '' });
 
     const handleJoin = async (e) => {
         e.preventDefault();
+        setStatus({ msg: 'Verifying Access Code...', type: 'info' });
+
         try {
             await api.post('/classrooms/join', { code: code });
-            setMessage("Access Granted: Portal Unlocked");
+            
+            setStatus({ msg: 'Access Granted: Portal Unlocked', type: 'success' });
             setCode('');
-            if (onJoinSuccess) onJoinSuccess();
-            setTimeout(() => setMessage(''), 3000);
+            
+            // --- CRITICAL FIX: REFRESH THE DASHBOARD ---
+            // This calls loadUserData() in the parent component
+            if (onJoinSuccess) {
+                onJoinSuccess();
+            }
+            // -------------------------------------------
+
+            // Clear success message after 3 seconds
+            setTimeout(() => setStatus({ msg: '', type: '' }), 3000);
+
         } catch (error) {
             console.error(error);
-            setMessage("Access Denied: Invalid Portal Code");
+            setStatus({ msg: 'Access Denied: Invalid Code', type: 'error' });
         }
     };
 
     return (
-        <div style={{ padding: '1.5rem', background: '#1e293b', border: '1px solid #334155', borderRadius: '8px', height: '100%' }}>
-            <h4 style={{ color: 'var(--text-secondary)', marginBottom: '10px', textTransform: 'uppercase' }}>Join Existing Portal</h4>
-            <p style={{ fontSize: '0.85rem', color: '#64748b', marginBottom: '15px' }}>
+        <div style={{ 
+            padding: '1.5rem', 
+            background: 'linear-gradient(145deg, #1e293b, #0f172a)', 
+            border: '1px solid #334155', 
+            borderRadius: '12px',
+            height: '100%',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'center'
+        }}>
+            <h4 style={{ color: 'var(--text-secondary)', marginBottom: '10px', textTransform: 'uppercase', letterSpacing: '1px' }}>
+                Join Existing Portal
+            </h4>
+            <p style={{ fontSize: '0.85rem', color: '#64748b', marginBottom: '20px' }}>
                 Enter a code to access a restricted environment.
             </p>
-            <form onSubmit={handleJoin} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            
+            <form onSubmit={handleJoin} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
                 <input 
                     type="text" 
                     placeholder="Enter Portal Code"
@@ -33,12 +57,45 @@ const JoinClass = ({ onJoinSuccess }) => {
                     onChange={(e) => setCode(e.target.value)}
                     required
                     className="input-field"
+                    style={{
+                        padding: '12px',
+                        background: '#0f172a',
+                        border: '1px solid #334155',
+                        color: 'white',
+                        borderRadius: '6px'
+                    }}
                 />
-                <button type="submit" className="btn-primary" style={{ background: '#334155' }}>
-                    JOIN PORTAL
+                <button 
+                    type="submit" 
+                    style={{
+                        padding: '12px',
+                        background: '#334155',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '6px',
+                        fontWeight: 'bold',
+                        cursor: 'pointer',
+                        textTransform: 'uppercase'
+                    }}
+                >
+                    Join Portal
                 </button>
             </form>
-            {message && <p style={{ marginTop: '10px', fontSize: '0.9rem', color: message.includes('Denied') ? 'var(--accent-red)' : 'var(--accent-green)' }}>{message}</p>}
+
+            {status.msg && (
+                <div style={{ 
+                    marginTop: '15px', 
+                    padding: '10px', 
+                    borderRadius: '6px',
+                    fontSize: '0.9rem',
+                    textAlign: 'center',
+                    background: status.type === 'success' ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
+                    color: status.type === 'success' ? '#34d399' : '#f87171',
+                    border: `1px solid ${status.type === 'success' ? '#059669' : '#b91c1c'}`
+                }}>
+                    {status.msg}
+                </div>
+            )}
         </div>
     );
 };

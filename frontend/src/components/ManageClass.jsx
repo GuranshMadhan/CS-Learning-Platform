@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import api from '../api/axiosConfig';
-import QuizEditor from './QuizEditor'; // Ensure this exists
+import QuizEditor from './QuizEditor'; // Ensure you have created this file from the previous step
 
 const ManageClass = ({ classroom, onBack }) => {
     const [quizzes, setQuizzes] = useState([]);
@@ -56,7 +56,7 @@ const ManageClass = ({ classroom, onBack }) => {
 
     return (
         <div style={{ padding: '20px', animation: 'fadeIn 0.5s ease' }}>
-            {/* HEADER AREA (This is what was missing in your screenshot) */}
+            {/* HEADER AREA */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
                 <button onClick={onBack} style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', fontSize: '1rem' }}>
                     &larr; Back to Dashboard
@@ -82,7 +82,6 @@ const ManageClass = ({ classroom, onBack }) => {
                     }}
                 >
                     <span>CODE:</span>
-                    {/* Shows "Loading..." if the code is null (from old DB data) */}
                     <span style={{ color: 'white' }}>{classroom.portalCode || "N/A"}</span>
                     <span style={{ fontSize: '0.8rem', opacity: 0.7 }}>📋</span>
                 </div>
@@ -118,7 +117,6 @@ const ManageClass = ({ classroom, onBack }) => {
                             className="input-field"
                             style={{ minHeight: '80px', resize: 'vertical', padding: '10px', background: '#0f172a', border: '1px solid #334155', color: 'white', borderRadius: '4px' }}
                         />
-                        {/* THIS BUTTON SHOULD BE GREEN, NOT BLUE */}
                         <button type="submit" className="btn-primary" style={{ padding: '10px', background: 'var(--accent-green)', color: '#0f172a', fontWeight:'bold', border:'none', borderRadius:'4px', cursor:'pointer' }}>
                             Initialize Quiz
                         </button>
@@ -151,20 +149,47 @@ const ManageClass = ({ classroom, onBack }) => {
                                         {quiz.questionCount || 0} Questions
                                     </p>
                                 </div>
-                                <button 
-                                    onClick={() => setEditingQuizId(quiz.id)}
-                                    style={{ 
-                                        padding: '8px 16px', 
-                                        background: 'var(--accent-blue)', 
-                                        color: 'white', 
-                                        border: 'none', 
-                                        borderRadius: '6px', 
-                                        cursor: 'pointer',
-                                        fontWeight: 'bold'
-                                    }}
-                                >
-                                    Edit / Add Questions &rarr;
-                                </button>
+                                
+                                <div style={{ display: 'flex', gap: '10px' }}>
+                                    {/* EDIT BUTTON */}
+                                    <button 
+                                        onClick={() => setEditingQuizId(quiz.id)}
+                                        style={{ 
+                                            padding: '8px 16px', 
+                                            background: 'var(--accent-blue)', 
+                                            color: 'white', 
+                                            border: 'none', 
+                                            borderRadius: '6px', 
+                                            cursor: 'pointer',
+                                            fontWeight: 'bold'
+                                        }}
+                                    >
+                                        Edit &rarr;
+                                    </button>
+
+                                    {/* DELETE BUTTON */}
+                                    <button 
+                                        onClick={async () => {
+                                            if (window.confirm("Delete this quiz permanently?")) {
+                                                try {
+                                                    await api.delete(`/quizzes/${quiz.id}`);
+                                                    loadQuizzes(); // Refresh list
+                                                } catch (e) { console.error(e); }
+                                            }
+                                        }}
+                                        style={{ 
+                                            padding: '8px', 
+                                            background: '#ef4444', 
+                                            color: 'white', 
+                                            border: 'none', 
+                                            borderRadius: '6px', 
+                                            cursor: 'pointer' 
+                                        }}
+                                        title="Delete Quiz"
+                                    >
+                                        🗑️
+                                    </button>
+                                </div>
                             </div>
                         ))}
                     </div>

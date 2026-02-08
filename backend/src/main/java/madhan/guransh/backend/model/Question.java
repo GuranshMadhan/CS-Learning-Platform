@@ -1,19 +1,19 @@
 package madhan.guransh.backend.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.Getter;
+import lombok.Setter;
 import madhan.guransh.backend.enums.Difficulty;
 import madhan.guransh.backend.enums.QuestionType;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
 @Table(name = "questions")
-@Data // <--- MAKE SURE THIS IS HERE
-@NoArgsConstructor
-@AllArgsConstructor
+@Getter
+@Setter
 public class Question {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -28,27 +28,23 @@ public class Question {
     @Enumerated(EnumType.STRING)
     private Difficulty difficulty;
 
-    private String option1;
-    private String option2;
-    private String option3;
-    private String option4;
-
-    private String correctAnswer;
-
     private int xpValue;
 
-    // RELATIONSHIPS -----------------------------------
+    @ElementCollection
+    @CollectionTable(name = "question_options", joinColumns = @JoinColumn(name = "question_id"))
+    @Column(name = "option_text", columnDefinition = "TEXT")
+    private List<String> options = new ArrayList<>();
 
-    // 1. If this is part of a specific Quiz (Classroom context)
-    @ManyToOne
+    @Column(columnDefinition = "TEXT")
+    private String correctAnswer;
+
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "quiz_id")
-    @com.fasterxml.jackson.annotation.JsonIgnore
+    @JsonIgnore
     private Quiz quiz;
 
-    // 2. If this belongs to a specific classroom (Private)
-    // If this is NULL, the question is "Global" and appears in Infinite Mode
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "classroom_id")
-    @com.fasterxml.jackson.annotation.JsonIgnore
+    @JsonIgnore
     private Classroom classroom;
 }

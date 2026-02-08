@@ -65,20 +65,33 @@ public class QuizService {
         return dto;
     }
 
-    // --- ADD QUESTION (Keep returning Question or make a QuestionDTO later) ---
-    public Question addQuestionToQuiz(Long quizId, String content, String op1, String op2, String op3, String op4, String answer) {
+    // --- DELETE QUIZ ---
+    public void deleteQuiz(Long quizId) {
+        if (quizRepository.existsById(quizId)) {
+            quizRepository.deleteById(quizId);
+        } else {
+            throw new RuntimeException("Quiz not found");
+        }
+    }
+
+    // --- UPDATED ADD QUESTION ---
+    public Question addQuestionToQuiz(Long quizId, String content, List<String> options, String answer, String typeStr) {
         Quiz quiz = quizRepository.findById(quizId)
                 .orElseThrow(() -> new RuntimeException("Quiz not found"));
 
         Question question = new Question();
         question.setContent(content);
-        question.setOption1(op1);
-        question.setOption2(op2);
-        question.setOption3(op3);
-        question.setOption4(op4);
+        question.setOptions(options);
         question.setCorrectAnswer(answer);
+
+        // Handle Type (Default to MC if null)
+        try {
+            question.setType(QuestionType.valueOf(typeStr));
+        } catch (Exception e) {
+            question.setType(QuestionType.MULTIPLE_CHOICE);
+        }
+
         question.setXpValue(10);
-        question.setType(QuestionType.MULTIPLE_CHOICE);
         question.setDifficulty(Difficulty.EASY);
         question.setQuiz(quiz);
 
@@ -96,9 +109,23 @@ public class QuizService {
         for (Question q : quiz.getQuestions()) {
             String key = "question_" + q.getId();
             String studentAnswer = studentAnswers.get(key);
-            if (studentAnswer != null && studentAnswer.equalsIgnoreCase(q.getCorrectAnswer())) {
-                correctCount++;
+
+            if (studentAnswer == null) continue;
+
+            boolean isCorrect = false;
+            if (q.getType() == QuestionType.PARSONS_PROBLEM) {
+                String correctOrder = String.join("|||", q.getOptions());
+                if (studentAnswer.equals(correctOrder)) {
+                    isCorrect = true;
+                }
+            } else {
+                // For MCQ, True/False, and Cloze, simply compare with correctAnswer field
+                if (studentAnswer.trim().equalsIgnoreCase(q.getCorrectAnswer().trim())) {
+                    isCorrect = true;
+                }
             }
+
+            if (isCorrect) correctCount++;
         }
 
         // Prevent Divide by Zero
