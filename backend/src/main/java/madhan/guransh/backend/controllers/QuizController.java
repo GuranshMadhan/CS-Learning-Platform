@@ -1,37 +1,33 @@
 package madhan.guransh.backend.controllers;
 
 import lombok.RequiredArgsConstructor;
+import madhan.guransh.backend.dto.QuizDTO;
 import madhan.guransh.backend.model.Question;
 import madhan.guransh.backend.model.Quiz;
 import madhan.guransh.backend.model.User;
+import madhan.guransh.backend.repository.QuizRepository;
 import madhan.guransh.backend.services.QuizService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Map;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/quizzes")
+@RequiredArgsConstructor
 public class QuizController {
 
     private final QuizService quizService;
+    private final QuizRepository quizRepository;
 
-    public QuizController(QuizService quizService) {
-        this.quizService = quizService;
-        System.out.println("✅ QUIZ CONTROLLER LOADED SUCCESSFULLY!");
-    }
-
+    // 1. Create Quiz (Now returns DTO)
     @PostMapping("/create")
-    public ResponseEntity<Quiz> createQuiz(
+    public ResponseEntity<QuizDTO> createQuiz(
             @RequestBody Map<String, Object> payload,
             @AuthenticationPrincipal User teacher
     ) {
-        // 2. DEBUG PRINT (To confirm request hits the method)
-        System.out.println("---------- QUIZ CREATE HIT ----------");
-        System.out.println("User: " + (teacher != null ? teacher.getUsername() : "NULL"));
-
         Long classroomId = Long.parseLong(payload.get("classroomId").toString());
         String title = (String) payload.get("title");
         String description = (String) payload.get("description");
@@ -41,16 +37,15 @@ public class QuizController {
         );
     }
 
+    // 2. Get Quizzes (Now returns List<DTO>)
     @GetMapping("/classroom/{classroomId}")
-    public ResponseEntity<List<Quiz>> getClassroomQuizzes(@PathVariable Long classroomId) {
+    public ResponseEntity<List<QuizDTO>> getClassroomQuizzes(@PathVariable Long classroomId) {
         return ResponseEntity.ok(quizService.getQuizzesForClassroom(classroomId));
     }
 
-    // 3. Add a Question to a Quiz
+    // 3. Add Question
     @PostMapping("/add-question")
-    public ResponseEntity<Question> addQuestion(
-            @RequestBody Map<String, Object> payload
-    ) {
+    public ResponseEntity<Question> addQuestion(@RequestBody Map<String, Object> payload) {
         Long quizId = Long.parseLong(payload.get("quizId").toString());
         String content = (String) payload.get("content");
         String op1 = (String) payload.get("option1");
@@ -64,7 +59,7 @@ public class QuizController {
         );
     }
 
-    // 4. Submit a Quiz
+    // 4. Submit Quiz
     @PostMapping("/{quizId}/submit")
     public ResponseEntity<String> submitQuiz(
             @PathVariable Long quizId,
@@ -73,5 +68,12 @@ public class QuizController {
     ) {
         int xpEarned = quizService.submitQuiz(quizId, answers, student);
         return ResponseEntity.ok("Quiz Submitted! You earned " + xpEarned + " XP.");
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<Quiz> getQuiz(@PathVariable Long id) {
+        return quizRepository.findById(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 }

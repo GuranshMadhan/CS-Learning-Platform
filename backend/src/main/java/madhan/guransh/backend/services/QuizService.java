@@ -1,6 +1,7 @@
 package madhan.guransh.backend.services;
 
 import lombok.RequiredArgsConstructor;
+import madhan.guransh.backend.dto.QuizDTO;
 import madhan.guransh.backend.enums.Difficulty;
 import madhan.guransh.backend.enums.QuestionType;
 import madhan.guransh.backend.model.Classroom;
@@ -15,6 +16,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -25,30 +27,45 @@ public class QuizService {
     private final QuestionRepository questionRepository;
     private final UserRepository userRepository;
 
-    public Quiz createQuiz(Long classroomId, String title, String description, User teacher) {
-        // 1. Find the classroom
+    // --- CREATE (Returns DTO) ---
+    public QuizDTO createQuiz(Long classroomId, String title, String description, User teacher) {
         Classroom classroom = classroomRepository.findById(classroomId)
                 .orElseThrow(() -> new RuntimeException("Classroom not found"));
 
-        // 2. SECURITY: Ensure the person creating the quiz is actually the teacher of this class
+        // Security Check
         if (!classroom.getTeacher().getId().equals(teacher.getId())) {
             throw new RuntimeException("You are not the teacher of this class!");
         }
 
-        // 3. Create and Save the Quiz
         Quiz quiz = new Quiz();
         quiz.setTitle(title);
         quiz.setDescription(description);
         quiz.setClassroom(classroom);
-        quiz.setCompletionBonusXp(50); // Default bonus for finishing a quiz
+        quiz.setCompletionBonusXp(50);
 
-        return quizRepository.save(quiz);
+        Quiz saved = quizRepository.save(quiz);
+        return mapToDTO(saved);
     }
 
-    public List<Quiz> getQuizzesForClassroom(Long classroomId) {
-        return quizRepository.findAllByClassroomId(classroomId);
+    // --- READ LIST (Returns List of DTOs) ---
+    public List<QuizDTO> getQuizzesForClassroom(Long classroomId) {
+        return quizRepository.findAllByClassroomId(classroomId).stream()
+                .map(this::mapToDTO)
+                .collect(Collectors.toList());
     }
 
+    // --- HELPER: Map Entity to DTO ---
+    private QuizDTO mapToDTO(Quiz q) {
+        QuizDTO dto = new QuizDTO();
+        dto.setId(q.getId());
+        dto.setTitle(q.getTitle());
+        dto.setDescription(q.getDescription());
+        dto.setClassroomId(q.getClassroom().getId());
+        dto.setQuestionCount(q.getQuestions().size());
+        return dto;
+    }
+
+    // --- ADD QUESTION (Keep returning Question or make a QuestionDTO later) ---
     public Question addQuestionToQuiz(Long quizId, String content, String op1, String op2, String op3, String op4, String answer) {
         Quiz quiz = quizRepository.findById(quizId)
                 .orElseThrow(() -> new RuntimeException("Quiz not found"));
@@ -60,58 +77,44 @@ public class QuizService {
         question.setOption3(op3);
         question.setOption4(op4);
         question.setCorrectAnswer(answer);
-
         question.setXpValue(10);
         question.setType(QuestionType.MULTIPLE_CHOICE);
         question.setDifficulty(Difficulty.EASY);
-
         question.setQuiz(quiz);
-
-        questionRepository.save(question);
 
         return questionRepository.save(question);
     }
 
+    // --- SUBMIT
     public int submitQuiz(Long quizId, Map<String, String> studentAnswers, User student) {
-        // 1. Fetch the Quiz
         Quiz quiz = quizRepository.findById(quizId)
                 .orElseThrow(() -> new RuntimeException("Quiz not found"));
 
         int correctCount = 0;
         int totalQuestions = quiz.getQuestions().size();
 
-        // 2. Loop through every question in the quiz
         for (Question q : quiz.getQuestions()) {
-            // We expect keys like "question_4" (where 4 is the ID)
             String key = "question_" + q.getId();
             String studentAnswer = studentAnswers.get(key);
-
-            // Compare answers (Case insensitive just to be safe)
             if (studentAnswer != null && studentAnswer.equalsIgnoreCase(q.getCorrectAnswer())) {
                 correctCount++;
             }
         }
 
-        // 3. Calculate Score (Simple Percentage)
-        // Avoid divide by zero if quiz is empty
+        // Prevent Divide by Zero
         if (totalQuestions == 0) return 0;
 
-        // 4. Award XP (Only if they get 100%? or just pass? Let's give XP based on correct answers)
-        // Logic: You get the Quiz Bonus ONLY if you get everything right (or maybe > 50%?)
-
-        int xpEarned = correctCount * 10; // 10 XP per correct question
+        int xpEarned = correctCount * 10;
         student.setTotalCorrectAnswers(student.getTotalCorrectAnswers() + correctCount);
+        student.setTotalQuestionsAttempted(student.getTotalQuestionsAttempted() + totalQuestions);
 
         if (correctCount == totalQuestions) {
-            xpEarned += quiz.getCompletionBonusXp(); // Add the 50 XP bonus for perfect score
+            xpEarned += quiz.getCompletionBonusXp();
         }
 
-        // 5. Save the Student's new XP
         student.setXp(student.getXp() + xpEarned);
         userRepository.save(student);
 
         return xpEarned;
     }
-
-    // TODO: Fix infinite xp exploit by tracking quiz attempts per user
 }

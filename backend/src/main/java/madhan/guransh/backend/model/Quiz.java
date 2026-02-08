@@ -1,12 +1,17 @@
 package madhan.guransh.backend.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
+
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
 @Table(name = "quizzes")
-@Data
+@Getter
+@Setter
 public class Quiz {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -15,14 +20,13 @@ public class Quiz {
     private String title;
     private String description;
 
-    // XP bonus for completing the whole quiz
-    private int completionBonusXp;
+    private int completionBonusXp = 50;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "classroom_id")
-    @com.fasterxml.jackson.annotation.JsonIgnore
+    @JsonIgnore
     private Classroom classroom;
 
-    @OneToMany(mappedBy = "quiz", cascade = CascadeType.ALL)
-    private List<Question> questions;
+    @OneToMany(mappedBy = "quiz", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Question> questions = new ArrayList<>();
 }
