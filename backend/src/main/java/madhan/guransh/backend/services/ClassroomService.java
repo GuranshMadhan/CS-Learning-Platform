@@ -5,7 +5,9 @@ import madhan.guransh.backend.dto.ClassroomDTO;
 import madhan.guransh.backend.model.Classroom;
 import madhan.guransh.backend.model.User;
 import madhan.guransh.backend.repository.ClassroomRepository;
+import madhan.guransh.backend.repository.UserRepository; // <--- Added
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
 
@@ -14,35 +16,43 @@ import java.util.UUID;
 public class ClassroomService {
 
     private final ClassroomRepository classroomRepository;
+    private final UserRepository userRepository;
 
     public ClassroomDTO createClassroom(String name, User teacher) {
-        // 1. Generate Random Code
         String portalCode = UUID.randomUUID().toString().substring(0, 6).toUpperCase();
 
-        // 2. Build Classroom
         Classroom classroom = new Classroom();
         classroom.setName(name);
         classroom.setTeacher(teacher);
         classroom.setPortalCode(portalCode);
 
-        // 3. Save
         Classroom saved = classroomRepository.save(classroom);
-
-        // 4. Convert to DTO (Fixes "Email as Name" bug)
         return mapToDTO(saved);
     }
 
-    public boolean joinClassroom(String portalCode, User student) {
-        Classroom classroom = classroomRepository.findByPortalCode(portalCode)
+    @Transactional
+    public boolean joinClassroom(String rawPortalCode, User studentPrincipal) {
+        if (rawPortalCode == null) return false;
+
+        String cleanCode = rawPortalCode.trim().toUpperCase();
+
+        // 1. Find Classroom
+        Classroom classroom = classroomRepository.findByPortalCode(cleanCode)
                 .orElse(null);
 
         if (classroom == null) return false;
 
-        if (!classroom.getStudents().contains(student)) {
-            classroom.getStudents().add(student);
-            classroomRepository.save(classroom);
+        // 2. RELOAD Student from DB (Vital to ensure we are attached to the session)
+        User student = userRepository.findById(studentPrincipal.getId())
+                .orElseThrow(() -> new RuntimeException("Student not found"));
+
+        if (!student.getEnrolledClassrooms().contains(classroom)) {
+            student.getEnrolledClassrooms().add(classroom);
+            userRepository.save(student); // <--- Saving the USER persists the link
+            return true;
         }
-        return true;
+
+        return true; // Already joined
     }
 
     private ClassroomDTO mapToDTO(Classroom c) {
@@ -51,7 +61,6 @@ public class ClassroomService {
         dto.setName(c.getName());
         dto.setPortalCode(c.getPortalCode());
 
-        // Use displayname
         if (c.getTeacher() != null) {
             dto.setTeacherName(c.getTeacher().getDisplayName());
         }
