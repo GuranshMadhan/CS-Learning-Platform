@@ -1,18 +1,13 @@
 package madhan.guransh.backend.services;
 
 import lombok.RequiredArgsConstructor;
-import madhan.guransh.backend.dto.QuizDTO;
+import madhan.guransh.backend.dto.QuizDTO; // <--- CHECK THIS IMPORT
 import madhan.guransh.backend.enums.Difficulty;
 import madhan.guransh.backend.enums.QuestionType;
-import madhan.guransh.backend.model.Classroom;
-import madhan.guransh.backend.model.Question;
-import madhan.guransh.backend.model.Quiz;
-import madhan.guransh.backend.model.User;
-import madhan.guransh.backend.repository.ClassroomRepository;
-import madhan.guransh.backend.repository.QuestionRepository;
-import madhan.guransh.backend.repository.QuizRepository;
-import madhan.guransh.backend.repository.UserRepository;
+import madhan.guransh.backend.model.*;
+import madhan.guransh.backend.repository.*;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Map;
@@ -26,13 +21,13 @@ public class QuizService {
     private final ClassroomRepository classroomRepository;
     private final QuestionRepository questionRepository;
     private final UserRepository userRepository;
+    private final QuizResultRepository quizResultRepository;
 
-    // --- CREATE (Returns DTO) ---
+    // --- CREATE ---
     public QuizDTO createQuiz(Long classroomId, String title, String description, User teacher) {
         Classroom classroom = classroomRepository.findById(classroomId)
                 .orElseThrow(() -> new RuntimeException("Classroom not found"));
 
-        // Security Check
         if (!classroom.getTeacher().getId().equals(teacher.getId())) {
             throw new RuntimeException("You are not the teacher of this class!");
         }
@@ -44,37 +39,54 @@ public class QuizService {
         quiz.setCompletionBonusXp(50);
 
         Quiz saved = quizRepository.save(quiz);
-        return mapToDTO(saved);
+
+        return mapToDTO(saved, null);
     }
 
-    // --- READ LIST (Returns List of DTOs) ---
-    public List<QuizDTO> getQuizzesForClassroom(Long classroomId) {
-        return quizRepository.findAllByClassroomId(classroomId).stream()
-                .map(this::mapToDTO)
-                .collect(Collectors.toList());
-    }
+    // --- GET LIST ---
+    @Transactional(readOnly = true)
+    public List<QuizDTO> getQuizzesForClassroom(Long classroomId, User principal) {
+        List<Quiz> quizzes = quizRepository.findAllByClassroomId(classroomId);
 
-    // --- HELPER: Map Entity to DTO ---
-    private QuizDTO mapToDTO(Quiz q) {
+        List<QuizResult> results = (principal != null)
+                ? quizResultRepository.findByUserIdAndQuizClassroomId(principal.getId(), classroomId)
+                : List.of();
+
+        return quizzes.stream().map(q -> {
+            QuizDTO dto = new QuizDTO();
+            dto.setId(q.getId());
+            dto.setTitle(q.getTitle());
+            dto.setDescription(q.getDescription());
+            dto.setClassroomId(q.getClassroom().getId());
+            dto.setQuestionCount(q.getQuestions().size());
+
+            QuizResult myResult = results.stream()
+                    .filter(r -> r.getQuiz().getId().equals(q.getId()))
+                    .findFirst()
+                    .orElse(null);
+
+            if (myResult != null) {
+                dto.setCompleted(true);
+                dto.setScoreDisplay(myResult.getScore() + "/" + myResult.getTotalQuestions());
+            }
+            return dto;
+        }).collect(Collectors.toList());
+    }
+    private QuizDTO mapToDTO(Quiz q, User student) {
         QuizDTO dto = new QuizDTO();
         dto.setId(q.getId());
         dto.setTitle(q.getTitle());
         dto.setDescription(q.getDescription());
         dto.setClassroomId(q.getClassroom().getId());
         dto.setQuestionCount(q.getQuestions().size());
+
+        if (student != null && student.getCompletedQuizzes().contains(q)) {
+            dto.setCompleted(true);
+        }
         return dto;
     }
 
-    // --- DELETE QUIZ ---
-    public void deleteQuiz(Long quizId) {
-        if (quizRepository.existsById(quizId)) {
-            quizRepository.deleteById(quizId);
-        } else {
-            throw new RuntimeException("Quiz not found");
-        }
-    }
-
-    // --- UPDATED ADD QUESTION ---
+    // --- ADD QUESTION ---
     public Question addQuestionToQuiz(Long quizId, String content, List<String> options, String answer, String typeStr) {
         Quiz quiz = quizRepository.findById(quizId)
                 .orElseThrow(() -> new RuntimeException("Quiz not found"));
@@ -84,7 +96,6 @@ public class QuizService {
         question.setOptions(options);
         question.setCorrectAnswer(answer);
 
-        // Handle Type (Default to MC if null)
         try {
             question.setType(QuestionType.valueOf(typeStr));
         } catch (Exception e) {
@@ -98,10 +109,18 @@ public class QuizService {
         return questionRepository.save(question);
     }
 
-    // --- SUBMIT
-    public int submitQuiz(Long quizId, Map<String, String> studentAnswers, User student) {
+    // --- SUBMIT ---
+    @Transactional
+    public int submitQuiz(Long quizId, Map<String, String> studentAnswers, User principal) {
+        User student = userRepository.findById(principal.getId())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
         Quiz quiz = quizRepository.findById(quizId)
                 .orElseThrow(() -> new RuntimeException("Quiz not found"));
+
+        if (quizResultRepository.findByUserIdAndQuizId(student.getId(), quiz.getId()).isPresent()) {
+            throw new RuntimeException("You have already completed this quest!");
+        }
 
         int correctCount = 0;
         int totalQuestions = quiz.getQuestions().size();
@@ -113,13 +132,11 @@ public class QuizService {
             if (studentAnswer == null) continue;
 
             boolean isCorrect = false;
+
             if (q.getType() == QuestionType.PARSONS_PROBLEM) {
                 String correctOrder = String.join("|||", q.getOptions());
-                if (studentAnswer.equals(correctOrder)) {
-                    isCorrect = true;
-                }
+                if (studentAnswer.equals(correctOrder)) isCorrect = true;
             } else {
-                // For MCQ, True/False, and Cloze, simply compare with correctAnswer field
                 if (studentAnswer.trim().equalsIgnoreCase(q.getCorrectAnswer().trim())) {
                     isCorrect = true;
                 }
@@ -128,20 +145,40 @@ public class QuizService {
             if (isCorrect) correctCount++;
         }
 
-        // Prevent Divide by Zero
-        if (totalQuestions == 0) return 0;
-
         int xpEarned = correctCount * 10;
         student.setTotalCorrectAnswers(student.getTotalCorrectAnswers() + correctCount);
-        student.setTotalQuestionsAttempted(student.getTotalQuestionsAttempted() + totalQuestions);
+        if (totalQuestions > 0 && correctCount == totalQuestions) {
+            xpEarned += quiz.getCompletionBonusXp();
+        }
+        student.setXp(student.getXp() + xpEarned);
 
-        if (correctCount == totalQuestions) {
+        if (totalQuestions > 0 && correctCount == totalQuestions) {
             xpEarned += quiz.getCompletionBonusXp();
         }
 
-        student.setXp(student.getXp() + xpEarned);
+        QuizResult result = new QuizResult();
+        result.setUser(student);
+        result.setQuiz(quiz);
+        result.setScore(correctCount);
+        result.setTotalQuestions(totalQuestions);
+        quizResultRepository.save(result);
+
+        student.getCompletedQuizzes().add(quiz);
         userRepository.save(student);
 
         return xpEarned;
+    }
+
+    public void deleteQuiz(Long quizId) {
+        if (quizRepository.existsById(quizId)) {
+            quizRepository.deleteById(quizId);
+        } else {
+            throw new RuntimeException("Quiz not found");
+        }
+    }
+
+    public Quiz getQuizById(Long id) {
+        return quizRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Quiz not found"));
     }
 }

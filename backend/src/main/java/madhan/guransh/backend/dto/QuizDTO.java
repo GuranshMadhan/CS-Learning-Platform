@@ -9,4 +9,6 @@ public class QuizDTO {
     private String description;
     private Long classroomId;
     private int questionCount;
+    private boolean completed;
+    private String scoreDisplay;
 }

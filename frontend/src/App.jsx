@@ -2,7 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Login from './components/Login';
 import Register from './components/Register';
-// We will build Dashboard next, but we need the route placeholder for the redirects to work
+import TheoryHub from './components/TheoryHub';
 import Dashboard from './components/Dashboard'; 
 
 function App() {
@@ -12,6 +12,7 @@ function App() {
         <Route path="/" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/theory" element={<TheoryHub />} />
       </Routes>
     </Router>
   );

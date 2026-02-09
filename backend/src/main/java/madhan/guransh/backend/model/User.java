@@ -8,9 +8,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
+import java.util.*;
 
 @Entity
 @Table(name = "users")
@@ -75,6 +73,14 @@ public class User implements UserDetails {
     public String getDisplayName() {
         return this.username;
     }
+
+    @ManyToMany
+    @JoinTable(
+            name = "user_completed_quizzes",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name="quiz_id")
+    )
+    private Set<Quiz> completedQuizzes = new HashSet<>();
 
     @Builder.Default
     private int totalQuestionsAttempted = 0;
