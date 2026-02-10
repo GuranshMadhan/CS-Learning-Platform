@@ -5,8 +5,8 @@ import JoinClass from './JoinClass';
 import CreateClass from './CreateClass';
 import ManageClass from './ManageClass';
 import QuizList from './QuizList';
+import TakeQuiz from './TakeQuiz';
 
-// --- REUSABLE MODAL COMPONENT ---
 const Modal = ({ isOpen, onClose, title, children }) => {
     if (!isOpen) return null;
     return (
@@ -38,30 +38,35 @@ const Modal = ({ isOpen, onClose, title, children }) => {
 const Dashboard = () => {
     const navigate = useNavigate();
     const [user, setUser] = useState(null);
+    const [globalQuizzes, setGlobalQuizzes] = useState([]);
     const [loading, setLoading] = useState(true);
     
-    // VIEW STATE
-    const [view, setView] = useState('dashboard');
+    const [view, setView] = useState('dashboard'); 
     const [selectedClassroom, setSelectedClassroom] = useState(null);
+    const [selectedGlobalQuizId, setSelectedGlobalQuizId] = useState(null);
     
-    // MODAL STATE
     const [showJoinModal, setShowJoinModal] = useState(false);
     const [showCreateModal, setShowCreateModal] = useState(false);
 
-    const loadUserData = async () => {
+    const loadData = async () => {
         try {
-            const response = await api.get('/user/me');
-            setUser(response.data);
-            setLoading(false);
+            const [userRes, globalRes] = await Promise.all([
+                api.get('/user/me'),
+                api.get('/quizzes/global')
+            ]);
+            setUser(userRes.data);
+            setGlobalQuizzes(globalRes.data);
         } catch (error) {
-            console.error("Failed to load user data", error);
+            console.error("Failed to load data", error);
+            localStorage.removeItem('token');
+            navigate('/login');
+        } finally {
             setLoading(false);
         }
     };
 
-    useEffect(() => { loadUserData(); }, []);
+    useEffect(() => { loadData(); }, [navigate]);
 
-    // --- NAVIGATION HANDLERS ---
     const handleOpenPortal = (classroom, isTeacher) => {
         setSelectedClassroom(classroom);
         setView(isTeacher ? 'manage' : 'student_portal');
@@ -69,13 +74,18 @@ const Dashboard = () => {
 
     const handleBack = () => {
         setSelectedClassroom(null);
+        setSelectedGlobalQuizId(null);
         setView('dashboard');
-        loadUserData();
+        loadData();
     };
 
-    // --- RENDER VIEWS ---
     if (loading) return <div style={{ color: 'white', padding: '20px' }}>Loading Dashboard...</div>;
+    if (!user) return null;
     
+    if (selectedGlobalQuizId) {
+        return <TakeQuiz quizId={selectedGlobalQuizId} onBack={handleBack} />;
+    }
+
     if (view === 'manage' && selectedClassroom) return <ManageClass classroom={selectedClassroom} onBack={handleBack} />;
 
     if (view === 'student_portal' && selectedClassroom) {
@@ -90,11 +100,9 @@ const Dashboard = () => {
         );
     }
 
-    // 3. Main Dashboard View
     return (
         <div style={{ padding: '20px', maxWidth: '1200px', margin: '0 auto', animation: 'fadeIn 0.5s ease' }}>
             
-            {/* HEADER */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '40px' }}>
                 <div>
                     <h1 style={{ color: 'white', margin: 0, fontSize: '2.5rem' }}>Welcome, <span style={{ color: 'var(--accent-blue)' }}>{user.username}</span></h1>
@@ -112,11 +120,9 @@ const Dashboard = () => {
                 </div>
             </div>
 
-            {/* --- ACTION GRID (4 Buttons) --- */}
             <h3 style={{ color: '#94a3b8', marginBottom: '15px', textTransform: 'uppercase', fontSize: '0.9rem', letterSpacing: '1px' }}>Quick Actions</h3>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px', marginBottom: '40px' }}>
                 
-                {/* 1. JOIN PORTAL */}
                 <div 
                     onClick={() => setShowJoinModal(true)}
                     className="action-card"
@@ -131,23 +137,20 @@ const Dashboard = () => {
                     <p style={{ color: '#64748b', fontSize: '0.8rem', marginTop: '5px' }}>Enter Access Code</p>
                 </div>
 
-                {/* 2. CREATE PORTAL */}
-                    <div 
-                        onClick={() => setShowCreateModal(true)}
-                        className="action-card"
-                        style={{
-                            height: '150px', background: 'linear-gradient(145deg, #1e293b, #0f172a)',
-                            padding: '20px', borderRadius: '12px', border: '1px solid #334155',
-                            cursor: 'pointer', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center'
-                        }}
-                    >
-                        <div style={{ fontSize: '2rem', marginBottom: '10px' }}>➕</div>
-                        <h3 style={{ color: 'white', margin: 0 }}>Create Portal</h3>
-                        <p style={{ color: '#64748b', fontSize: '0.8rem', marginTop: '5px' }}>New Class Group</p>
-                    </div>
-                {/* )} */}
+                <div 
+                    onClick={() => setShowCreateModal(true)}
+                    className="action-card"
+                    style={{
+                        height: '150px', background: 'linear-gradient(145deg, #1e293b, #0f172a)',
+                        padding: '20px', borderRadius: '12px', border: '1px solid #334155',
+                        cursor: 'pointer', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center'
+                    }}
+                >
+                    <div style={{ fontSize: '2rem', marginBottom: '10px' }}>➕</div>
+                    <h3 style={{ color: 'white', margin: 0 }}>Create Portal</h3>
+                    <p style={{ color: '#64748b', fontSize: '0.8rem', marginTop: '5px' }}>New Class Group</p>
+                </div>
 
-                {/* 3. THEORY HUB */}
                 <div 
                     onClick={() => navigate('/theory')}
                     className="action-card"
@@ -162,7 +165,6 @@ const Dashboard = () => {
                     <p style={{ color: '#64748b', fontSize: '0.8rem', marginTop: '5px' }}>OCR J277 Notes</p>
                 </div>
 
-                {/* 4. LEADERBOARD */}
                 <div 
                     onClick={() => navigate('/leaderboard')}
                     className="action-card"
@@ -178,7 +180,41 @@ const Dashboard = () => {
                 </div>
             </div>
 
-            {/* --- PORTALS LIST --- */}
+            <h3 style={{ color: '#94a3b8', marginBottom: '15px', textTransform: 'uppercase', fontSize: '0.9rem', letterSpacing: '1px' }}>Global Practice</h3>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '20px', marginBottom: '40px' }}>
+                {globalQuizzes.length === 0 ? (
+                    <div style={{ color: '#64748b', fontStyle: 'italic' }}>No global challenges available right now.</div>
+                ) : (
+                    globalQuizzes.map(quiz => (
+                        <div key={quiz.id} 
+                            style={{ 
+                                background: '#0f172a', border: '1px solid #334155', padding: '20px', borderRadius: '12px',
+                                opacity: quiz.completed ? 0.7 : 1, transition: '0.2s', display: 'flex', flexDirection: 'column', justifyContent: 'space-between'
+                            }}
+                        >
+                            <div style={{ marginBottom: '15px' }}>
+                                <h4 style={{ margin: '0 0 5px 0', color: quiz.completed ? '#94a3b8' : 'white' }}>{quiz.title} {quiz.completed && '✅'}</h4>
+                                <p style={{ margin: 0, fontSize: '0.85rem', color: '#64748b' }}>{quiz.description}</p>
+                            </div>
+                            
+                            {quiz.completed ? (
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                    <span style={{ color: '#34d399', fontSize: '0.8rem', fontWeight: 'bold' }}>Score: {quiz.scoreDisplay}</span>
+                                    <button disabled style={{ flex: 1, padding: '8px', background: '#334155', color: '#94a3b8', border: 'none', borderRadius: '6px', cursor: 'not-allowed', fontSize: '0.8rem' }}>COMPLETED</button>
+                                </div>
+                            ) : (
+                                <button 
+                                    onClick={() => setSelectedGlobalQuizId(quiz.id)}
+                                    style={{ width: '100%', padding: '10px', background: 'var(--accent-blue)', color: 'white', border: 'none', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer' }}
+                                >
+                                    Start Challenge
+                                </button>
+                            )}
+                        </div>
+                    ))
+                )}
+            </div>
+
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '30px' }}>
                 <div>
                     <h3 style={{ color: '#94a3b8', marginBottom: '15px' }}>My Enrolled Portals</h3>
@@ -217,13 +253,12 @@ const Dashboard = () => {
                 </div>
             </div>
 
-            {/* --- MODALS --- */}
             <Modal isOpen={showJoinModal} onClose={() => setShowJoinModal(false)} title="Join Portal">
-                <JoinClass onJoinSuccess={() => { setShowJoinModal(false); loadUserData(); }} />
+                <JoinClass onJoinSuccess={() => { setShowJoinModal(false); loadData(); }} />
             </Modal>
 
             <Modal isOpen={showCreateModal} onClose={() => setShowCreateModal(false)} title="Create Portal">
-                <CreateClass onCreateSuccess={() => { setShowCreateModal(false); loadUserData(); }} />
+                <CreateClass onCreateSuccess={() => { setShowCreateModal(false); loadData(); }} />
             </Modal>
         </div>
     );

@@ -4,6 +4,7 @@ import Login from './components/Login';
 import Register from './components/Register';
 import TheoryHub from './components/TheoryHub';
 import Dashboard from './components/Dashboard'; 
+import Leaderboard from './components/Leaderboard'
 
 function App() {
   return (
@@ -13,6 +14,7 @@ function App() {
         <Route path="/register" element={<Register />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/theory" element={<TheoryHub />} />
+        <Route path="/leaderboard" element={<Leaderboard />} />
       </Routes>
     </Router>
   );

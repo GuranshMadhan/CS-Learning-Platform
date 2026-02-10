@@ -77,12 +77,19 @@ public class QuizService {
         dto.setId(q.getId());
         dto.setTitle(q.getTitle());
         dto.setDescription(q.getDescription());
-        dto.setClassroomId(q.getClassroom().getId());
         dto.setQuestionCount(q.getQuestions().size());
 
-        if (student != null && student.getCompletedQuizzes().contains(q)) {
-            dto.setCompleted(true);
+        if (q.getClassroom() != null) {
+            dto.setClassroomId(q.getClassroom().getId());
+            if (student != null && student.getCompletedQuizzes().contains(q)) {
+                dto.setCompleted(true);
+            }
+        } else {
+            dto.setClassroomId(null);
+            dto.setCompleted(false);
+            dto.setScoreDisplay(null);
         }
+
         return dto;
     }
 
@@ -180,5 +187,19 @@ public class QuizService {
     public Quiz getQuizById(Long id) {
         return quizRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Quiz not found"));
+    }
+
+    @Transactional(readOnly = true)
+    public List<QuizDTO> getGlobalQuizzes(User principal) {
+        User attachedUser = null;
+        if (principal != null) {
+            attachedUser = userRepository.findById(principal.getId()).orElse(null);
+        }
+        final User student = attachedUser;
+
+        return quizRepository.findAll().stream()
+                .filter(q -> q.getClassroom() == null)
+                .map(q -> mapToDTO(q, student))
+                .collect(Collectors.toList());
     }
 }

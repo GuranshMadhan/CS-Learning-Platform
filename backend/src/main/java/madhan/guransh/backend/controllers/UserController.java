@@ -33,11 +33,29 @@ public class UserController {
     }
 
     // GET /api/v1/user/leaderboard
+    @Transactional
     @GetMapping("/leaderboard")
-    public ResponseEntity<List<User>> getLeaderboard() {
-        // For leaderboard, we can return the simple list or map to DTOs too
-        // Keeping it simple for now, but ensure UserRepository exists
-        return ResponseEntity.ok(userRepository.findTop10ByOrderByXpDesc());
+    public ResponseEntity<List<UserDTO>> getLeaderboard() {
+        return ResponseEntity.ok(
+                userRepository.findTop10ByOrderByXpDesc()
+                        .stream()
+                        .map(user -> {
+                            UserDTO dto = new UserDTO();
+                            dto.setId(user.getId());
+
+                            if (user.getDisplayName() != null && !user.getDisplayName().isEmpty()) {
+                                dto.setUsername(user.getDisplayName());
+                            } else {
+                                dto.setUsername(user.getEmail()); // Fallback
+                            }
+
+                            dto.setXp(user.getXp());
+                            dto.setTotalCorrectAnswers(user.getTotalCorrectAnswers());
+
+                            return dto;
+                        })
+                        .collect(Collectors.toList())
+        );
     }
 
     private UserDTO mapToDTO(User user) {

@@ -82,4 +82,9 @@ public class QuizController {
         quizService.deleteQuiz(id);
         return ResponseEntity.ok("Quiz deleted.");
     }
+
+    @GetMapping("/global")
+    public ResponseEntity<List<QuizDTO>> getGlobalQuizzes(@AuthenticationPrincipal User student) {
+        return ResponseEntity.ok(quizService.getGlobalQuizzes(student));
+    }
 }

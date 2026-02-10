@@ -2,10 +2,19 @@ import React, { useState, useEffect } from 'react';
 import api from '../api/axiosConfig';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 
+const shuffleArray = (array) => {
+    const newArr = [...array];
+    for (let i = newArr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [newArr[i], newArr[j]] = [newArr[j], newArr[i]];
+    }
+    return newArr;
+};
+
 const TakeQuiz = ({ quizId, onBack }) => {
     const [quiz, setQuiz] = useState(null);
     const [answers, setAnswers] = useState({});
-    const [parsonsState, setParsonsState] = useState({}); // Stores the shuffled order for each Parsons question
+    const [parsonsState, setParsonsState] = useState({});
     const [result, setResult] = useState(null);
 
     useEffect(() => {
@@ -14,13 +23,10 @@ const TakeQuiz = ({ quizId, onBack }) => {
                 const response = await api.get(`/quizzes/${quizId}`);
                 const quizData = response.data;
                 
-                // Initialize Parsons Problems: Shuffle the options for the student
                 const initialParsons = {};
                 quizData.questions.forEach(q => {
                     if (q.type === 'PARSONS_PROBLEM') {
-                        // Create a copy and shuffle it
-                        const shuffled = [...q.options].sort(() => Math.random() - 0.5);
-                        initialParsons[q.id] = shuffled;
+                        initialParsons[q.id] = shuffleArray(q.options);
                     }
                 });
                 
@@ -33,22 +39,16 @@ const TakeQuiz = ({ quizId, onBack }) => {
         loadQuiz();
     }, [quizId]);
 
-    // Handle Drag and Drop
     const onDragEnd = (result) => {
         if (!result.destination) return;
-
-        const { source, destination, draggableId } = result;
-        // The Droppable ID is the Question ID
+        const { source, destination } = result;
         const questionId = parseInt(source.droppableId);
         
         const currentOrder = Array.from(parsonsState[questionId]);
         const [reorderedItem] = currentOrder.splice(source.index, 1);
         currentOrder.splice(destination.index, 0, reorderedItem);
 
-        setParsonsState(prev => ({
-            ...prev,
-            [questionId]: currentOrder
-        }));
+        setParsonsState(prev => ({ ...prev, [questionId]: currentOrder }));
     };
 
     const handleTextChange = (questionId, val) => {
@@ -57,11 +57,7 @@ const TakeQuiz = ({ quizId, onBack }) => {
 
     const handleSubmit = async () => {
         if (!window.confirm("Submit Assessment?")) return;
-
-        // Prepare Payload
         const finalAnswers = { ...answers };
-
-        // For Parsons, join the current state into a single string
         Object.keys(parsonsState).forEach(qId => {
             finalAnswers[`question_${qId}`] = parsonsState[qId].join('|||');
         });
@@ -70,8 +66,7 @@ const TakeQuiz = ({ quizId, onBack }) => {
             const response = await api.post(`/quizzes/${quizId}/submit`, finalAnswers);
             setResult(response.data);
         } catch (error) {
-            console.error(error);
-            alert("Submission Failed");
+            alert(error.response?.data || "Submission Failed");
         }
     };
 
@@ -97,16 +92,11 @@ const TakeQuiz = ({ quizId, onBack }) => {
                 <div style={{ display: 'grid', gap: '30px', marginTop: '20px' }}>
                     {quiz.questions.map((q, index) => (
                         <div key={q.id} style={{ background: '#1e293b', padding: '25px', borderRadius: '12px', border: '1px solid #334155' }}>
-                            
-                            {/* Question Header */}
                             <h3 style={{ color: '#e2e8f0', marginTop: 0 }}>
                                 <span style={{ color: 'var(--accent-blue)', marginRight: '10px' }}>{index + 1}.</span> 
-                                {q.content}
+                                {q.type === 'CLOZE_CODE' ? "Fill in the blank:" : q.content}
                             </h3>
 
-                            {/* --- RENDER BASED ON TYPE --- */}
-
-                            {/* 1. PARSONS PROBLEM */}
                             {q.type === 'PARSONS_PROBLEM' && (
                                 <div style={{ background: '#0f172a', padding: '15px', borderRadius: '8px' }}>
                                     <p style={{ fontSize: '0.8rem', color: '#64748b', marginBottom: '10px' }}>Drag items to reorder:</p>
@@ -128,6 +118,7 @@ const TakeQuiz = ({ quizId, onBack }) => {
                                                                     color: '#e2e8f0',
                                                                     fontFamily: 'monospace',
                                                                     borderRadius: '4px',
+                                                                    whiteSpace: 'pre',
                                                                     ...provided.draggableProps.style
                                                                 }}
                                                             >
@@ -143,23 +134,37 @@ const TakeQuiz = ({ quizId, onBack }) => {
                                 </div>
                             )}
 
-                            {/* 2. CLOZE CODE */}
                             {q.type === 'CLOZE_CODE' && (
-                                <div style={{ background: '#0f172a', padding: '20px', borderRadius: '8px', fontFamily: 'monospace', color: '#e2e8f0', whiteSpace: 'pre-wrap' }}>
-                                    {q.options[0].split('__BLANK__').map((part, i, arr) => (
+                                <div style={{ 
+                                    background: '#0f172a', 
+                                    padding: '20px', 
+                                    borderRadius: '8px', 
+                                    fontFamily: 'monospace', 
+                                    color: '#e2e8f0', 
+                                    whiteSpace: 'pre-wrap',
+                                    fontSize: '1.1rem',
+                                    lineHeight: '2'
+                                }}>
+                                    {q.content.split('________').map((part, i, arr) => (
                                         <React.Fragment key={i}>
                                             {part}
                                             {i < arr.length - 1 && (
                                                 <input 
+                                                    type="text"
+                                                    autoComplete="off"
                                                     style={{ 
-                                                        background: '#1e293b', 
-                                                        border: '1px solid var(--accent-blue)', 
-                                                        color: 'white', 
-                                                        padding: '4px', 
-                                                        borderRadius: '4px',
-                                                        width: '100px',
-                                                        margin: '0 5px'
+                                                        background: 'transparent', 
+                                                        border: 'none',
+                                                        borderBottom: '2px solid var(--accent-blue)', 
+                                                        color: 'var(--accent-green)', 
+                                                        padding: '0 5px', 
+                                                        width: '120px',
+                                                        textAlign: 'center',
+                                                        fontSize: '1.1rem',
+                                                        outline: 'none',
+                                                        fontWeight: 'bold'
                                                     }}
+                                                    placeholder="type answer..."
                                                     onChange={(e) => handleTextChange(q.id, e.target.value)}
                                                 />
                                             )}
@@ -168,7 +173,6 @@ const TakeQuiz = ({ quizId, onBack }) => {
                                 </div>
                             )}
 
-                            {/* 3. MULTIPLE CHOICE / TRUE FALSE */}
                             {(q.type === 'MULTIPLE_CHOICE' || q.type === 'TRUE_FALSE') && (
                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', marginTop: '20px' }}>
                                     {(q.type === 'TRUE_FALSE' ? ['True', 'False'] : q.options).map((opt, i) => (
@@ -190,7 +194,6 @@ const TakeQuiz = ({ quizId, onBack }) => {
                                     ))}
                                 </div>
                             )}
-
                         </div>
                     ))}
                 </div>
