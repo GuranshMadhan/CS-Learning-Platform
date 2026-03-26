@@ -60,24 +60,17 @@ public class QuestionService {
     public boolean submitAnswer(Long userId, Long questionId, String userAnswer) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
-
         Question question = questionRepository.findById(questionId)
                 .orElseThrow(() -> new RuntimeException("Question not found"));
-
-        // 1. Always increment attempt count
         user.setTotalQuestionsAttempted(user.getTotalQuestionsAttempted() + 1);
-
-        // 2. Check correctness
         boolean isCorrect = question.getCorrectAnswer().trim().equalsIgnoreCase(userAnswer.trim());
-
         if (isCorrect) {
             user.setXp(user.getXp() + question.getXpValue());
             user.setTotalCorrectAnswers(user.getTotalCorrectAnswers() + 1);
         } else {
             user.setTotalIncorrectAnswers(user.getTotalIncorrectAnswers() + 1);
         }
-
-        userRepository.save(user); // Save attempts and XP
+        userRepository.save(user);
         return isCorrect;
     }
 

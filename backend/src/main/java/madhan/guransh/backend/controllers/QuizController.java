@@ -20,7 +20,7 @@ public class QuizController {
     private final QuizService quizService;
 
     @PostMapping("/create")
-    public ResponseEntity<QuizDTO> createQuiz( // <--- Must allow QuizDTO
+    public ResponseEntity<QuizDTO> createQuiz(
                                                @RequestBody Map<String, Object> payload,
                                                @AuthenticationPrincipal User teacher
     ) {
@@ -34,7 +34,7 @@ public class QuizController {
     }
 
     @GetMapping("/classroom/{classroomId}")
-    public ResponseEntity<List<QuizDTO>> getClassroomQuizzes( // <--- Must return List<QuizDTO>
+    public ResponseEntity<List<QuizDTO>> getClassroomQuizzes(
                                                               @PathVariable Long classroomId,
                                                               @AuthenticationPrincipal User student
     ) {

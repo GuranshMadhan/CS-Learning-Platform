@@ -22,8 +22,6 @@ public class QuestionController {
         System.out.println("✅ QuestionController Loaded Successfully!");
     }
 
-    // 1. Get Infinite Mode Questions
-    // GET /api/v1/questions/infinite
     @GetMapping("/infinite")
     public ResponseEntity<Object> getInfiniteQuestions() {
         System.out.println("---------- CONTROLLER HIT ----------");
@@ -39,14 +37,11 @@ public class QuestionController {
         return ResponseEntity.ok(questions);
     }
 
-    // 2. Submit an Answer
-    // POST /api/v1/questions/{id}/submit
-    // Body: { "answer": "Paris" }
     @PostMapping("/{questionId}/submit")
     public ResponseEntity<String> submitAnswer(
             @PathVariable Long questionId,
-            @RequestBody Map<String, String> payload, // Simple JSON wrapper
-            @AuthenticationPrincipal User user // <--- Gets user from Token
+            @RequestBody Map<String, String> payload,
+            @AuthenticationPrincipal User user
     ) {
         String userAnswer = payload.get("answer");
 

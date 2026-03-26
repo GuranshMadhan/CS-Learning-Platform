@@ -22,17 +22,14 @@ public class DashboardController {
     @GetMapping
     public ResponseEntity<DashboardResponse> getDashboard(@AuthenticationPrincipal User user) {
 
-        // 1. Map Enrolled Classrooms to Summary DTO
         List<DashboardResponse.ClassroomSummary> enrolled = user.getEnrolledClassrooms().stream()
                 .map(this::mapToSummary)
                 .collect(Collectors.toList());
 
-        // 2. Map Teaching Classrooms to Summary DTO
         List<DashboardResponse.ClassroomSummary> teaching = user.getTeachingClassrooms().stream()
                 .map(this::mapToSummary)
                 .collect(Collectors.toList());
 
-        // 3. Build the response
         var response = DashboardResponse.builder()
                 .username(user.getUsername()) // or .getFirstname()
                 .email(user.getEmail())
@@ -45,7 +42,6 @@ public class DashboardController {
         return ResponseEntity.ok(response);
     }
 
-    // Helper method to convert Entity -> DTO
     private DashboardResponse.ClassroomSummary mapToSummary(Classroom classroom) {
         return DashboardResponse.ClassroomSummary.builder()
                 .id(classroom.getId())

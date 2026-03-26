@@ -27,12 +27,10 @@ public class UserService {
 
     public void registerUser(String username, String password, String role, String portalCode) {
 
-        // 1. SECURITY CHECK: Are they trying to be a Teacher?
         if (role.equals("TEACHER")) {
             if (portalCode == null || !portalCode.equals(ADMIN_SECRET)) {
                 throw new RuntimeException("Invalid Teacher Secret! You cannot register as staff.");
             }
-            // If the code matches, we allow it.
         }
 
         User newUser = new User();
@@ -41,7 +39,6 @@ public class UserService {
         newUser.setRole(Role.valueOf(role));
         newUser.setXp(0);
 
-        // 2. LOGIC: If they are a Student, handle the Class Join Code
         if (role.equals("STUDENT") && portalCode != null && !portalCode.isEmpty()) {
             Optional<Classroom> classOpt = classroomRepository.findByPortalCode(portalCode);
 
@@ -49,7 +46,6 @@ public class UserService {
                 Classroom classroom = classOpt.get();
 
             } else {
-                // Ideally, throw an error or just warn them
                 System.out.println("Warning: Student entered invalid class code.");
             }
         }

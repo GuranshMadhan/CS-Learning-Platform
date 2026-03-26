@@ -2,7 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 
 const topics = [
-    { id: '1.1', title: '1.1 Systems Architecture' },
+    { id: '1.1', title: '1.1 Systems Architecture', path: '/theory/1.1' }, 
     { id: '1.2', title: '1.2 Memory and Storage' },
     { id: '1.3', title: '1.3 Computer Networks' },
     { id: '1.4', title: '1.4 Network Security' },
@@ -38,7 +38,14 @@ const TheoryHub = ({ onBack }) => {
                 {topics.map((topic) => (
                     <div 
                         key={topic.id}
-                        onClick={() => alert(`Content for ${topic.title} coming soon!`)} // Placeholder action
+                        // Updated onClick to handle the routing conditionally
+                        onClick={() => {
+                            if (topic.path) {
+                                navigate(topic.path);
+                            } else {
+                                alert(`Content for ${topic.title} coming soon!`);
+                            }
+                        }}
                         style={{
                             background: '#1e293b',
                             border: '1px solid #334155',

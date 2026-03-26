@@ -5,6 +5,7 @@ import Register from './components/Register';
 import TheoryHub from './components/TheoryHub';
 import Dashboard from './components/Dashboard'; 
 import Leaderboard from './components/Leaderboard'
+import SystemsArchitectureNotes from './components/SystemsArchitectureNotes';
 
 function App() {
   return (
@@ -15,6 +16,7 @@ function App() {
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/theory" element={<TheoryHub />} />
         <Route path="/leaderboard" element={<Leaderboard />} />
+        <Route path="/theory/1.1" element={<SystemsArchitectureNotes />} />
       </Routes>
     </Router>
   );

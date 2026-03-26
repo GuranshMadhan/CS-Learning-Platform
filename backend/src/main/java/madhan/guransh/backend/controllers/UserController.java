@@ -22,9 +22,8 @@ public class UserController {
 
     // GET /api/v1/user/me
     @GetMapping("/me")
-    @Transactional(readOnly = true) // <--- CRITICAL FIX: Keeps DB connection open
+    @Transactional(readOnly = true)
     public ResponseEntity<UserDTO> getCurrentUser(@AuthenticationPrincipal User principal) {
-        // 1. Reload User from DB to ensure it's "Attached" (prevents LazyInitException)
         User user = userRepository.findByEmail(principal.getEmail())
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
@@ -65,16 +64,13 @@ public class UserController {
         dto.setEmail(user.getEmail());
         dto.setRole(user.getRole().name());
 
-        // Stats
         dto.setXp(user.getXp());
         dto.setTotalCorrectAnswers(user.getTotalCorrectAnswers());
         dto.setTotalQuestionsAttempted(user.getTotalQuestionsAttempted());
 
-        // 1. Calculate Rank
         int rank = userRepository.calculateRank(user.getXp());
         dto.setRank(rank);
 
-        // 2. Calculate Accuracy (Avoid divide by zero)
         if (user.getTotalQuestionsAttempted() > 0) {
             double acc = (double) user.getTotalCorrectAnswers() / user.getTotalQuestionsAttempted() * 100;
             dto.setAccuracy(Math.round(acc * 10.0) / 10.0); // Round to 1 decimal

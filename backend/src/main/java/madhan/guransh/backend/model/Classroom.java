@@ -11,8 +11,8 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "classrooms")
-@Getter // <--- CHANGED FROM @Data
-@Setter // <--- CHANGED FROM @Data
+@Getter
+@Setter
 public class Classroom {
 
     @Id
@@ -23,8 +23,6 @@ public class Classroom {
 
     @Column(unique = true)
     private String portalCode;
-
-    // --- RELATIONSHIPS ---
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "teacher_id")

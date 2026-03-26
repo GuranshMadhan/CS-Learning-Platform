@@ -12,13 +12,11 @@ public class DashboardResponse {
     private String username;
     private String email;
     private int xp;
-    private Role role; // Change to String if you are still using String for roles
+    private Role role;
 
-    // We send the full list so the frontend can show "My Classes"
     private List<ClassroomSummary> enrolledClassrooms;
     private List<ClassroomSummary> teachingClassrooms;
 
-    // Helper class to avoid sending too much info (like student lists)
     @Data
     @Builder
     public static class ClassroomSummary {

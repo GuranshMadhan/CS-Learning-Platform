@@ -23,7 +23,6 @@ public class QuizService {
     private final UserRepository userRepository;
     private final QuizResultRepository quizResultRepository;
 
-    // --- CREATE ---
     public QuizDTO createQuiz(Long classroomId, String title, String description, User teacher) {
         Classroom classroom = classroomRepository.findById(classroomId)
                 .orElseThrow(() -> new RuntimeException("Classroom not found"));
@@ -43,7 +42,6 @@ public class QuizService {
         return mapToDTO(saved, null);
     }
 
-    // --- GET LIST ---
     @Transactional(readOnly = true)
     public List<QuizDTO> getQuizzesForClassroom(Long classroomId, User principal) {
         List<Quiz> quizzes = quizRepository.findAllByClassroomId(classroomId);
@@ -93,7 +91,6 @@ public class QuizService {
         return dto;
     }
 
-    // --- ADD QUESTION ---
     public Question addQuestionToQuiz(Long quizId, String content, List<String> options, String answer, String typeStr) {
         Quiz quiz = quizRepository.findById(quizId)
                 .orElseThrow(() -> new RuntimeException("Quiz not found"));
@@ -116,7 +113,6 @@ public class QuizService {
         return questionRepository.save(question);
     }
 
-    // --- SUBMIT ---
     @Transactional
     public int submitQuiz(Long quizId, Map<String, String> studentAnswers, User principal) {
         User student = userRepository.findById(principal.getId())

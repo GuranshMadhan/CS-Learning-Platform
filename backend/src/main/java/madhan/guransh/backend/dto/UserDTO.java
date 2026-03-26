@@ -10,7 +10,6 @@ public class UserDTO {
     private String email;
     private String role;
 
-    // Stats
     private int xp;
     private int totalCorrectAnswers;
     private int totalQuestionsAttempted;

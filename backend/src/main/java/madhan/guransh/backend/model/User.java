@@ -23,16 +23,16 @@ public class User implements UserDetails {
     private Long id;
 
     @Column(unique = true)
-    private String username; // Stores "Madhan"
+    private String username;
 
     @Column(unique = true)
-    private String email;    // Stores "madhan@gmail.com"
+    private String email;
 
     @JsonIgnore
     private String password;
 
     @Enumerated(EnumType.STRING)
-    @Builder.Default // Fixes the "Null Role" crash
+    @Builder.Default
     private Role role = Role.USER;
 
     @Builder.Default
@@ -44,7 +44,6 @@ public class User implements UserDetails {
     @Builder.Default
     private int totalIncorrectAnswers = 0;
 
-    // --- RELATIONSHIPS ---
 
     @OneToMany(mappedBy = "teacher", fetch = FetchType.LAZY)
     @JsonIgnore
@@ -61,15 +60,11 @@ public class User implements UserDetails {
     @Builder.Default
     private List<Classroom> enrolledClassrooms = new ArrayList<>();
 
-    // --- CRITICAL FIX: UserDetails Logic ---
-
-    // 1. Force the system to use EMAIL as the identifier
     @Override
     public String getUsername() {
         return email;
     }
 
-    // 2. Helper to get the actual display name if needed
     public String getDisplayName() {
         return this.username;
     }

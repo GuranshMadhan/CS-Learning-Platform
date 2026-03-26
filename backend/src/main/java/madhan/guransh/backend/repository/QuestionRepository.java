@@ -9,8 +9,6 @@ import java.util.Optional;
 
 public interface QuestionRepository extends JpaRepository<Question, Long> {
 
-    // 1. Fetch Global Questions (Where Classroom is NULL) randomly
-    // changed to nativeQuery = true to use Postgres RANDOM()
     @Query(value = "SELECT * FROM questions WHERE classroom_id IS NULL ORDER BY RANDOM() LIMIT 20", nativeQuery = true)
     List<Question> findAllRandomGlobalQuestions();
 

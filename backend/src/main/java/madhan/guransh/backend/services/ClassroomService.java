@@ -36,23 +36,21 @@ public class ClassroomService {
 
         String cleanCode = rawPortalCode.trim().toUpperCase();
 
-        // 1. Find Classroom
         Classroom classroom = classroomRepository.findByPortalCode(cleanCode)
                 .orElse(null);
 
         if (classroom == null) return false;
 
-        // 2. RELOAD Student from DB (Vital to ensure we are attached to the session)
         User student = userRepository.findById(studentPrincipal.getId())
                 .orElseThrow(() -> new RuntimeException("Student not found"));
 
         if (!student.getEnrolledClassrooms().contains(classroom)) {
             student.getEnrolledClassrooms().add(classroom);
-            userRepository.save(student); // <--- Saving the USER persists the link
+            userRepository.save(student);
             return true;
         }
 
-        return true; // Already joined
+        return true;
     }
 
     private ClassroomDTO mapToDTO(Classroom c) {
